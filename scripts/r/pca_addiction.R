@@ -15,7 +15,7 @@
 library(Hmisc) # arrow function
 # library(calibrate)
 # library(multcomp)
-library(ggplot2)
+library(ggplot2) 
 library(FactoMineR)
 
 ##Getting HOME directory 
