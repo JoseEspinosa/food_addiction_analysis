@@ -9,12 +9,10 @@
 
 #####################
 #####################
-## PCA of reinstatement matrix
-# install.packages("FactoMineR")
+## PCA of behavioral measures
+
 # Calling libraries
 library(Hmisc) # arrow function
-# library(calibrate)
-# library(multcomp)
 library(ggplot2) 
 library(FactoMineR)
 
