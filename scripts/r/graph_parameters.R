@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 #############################################################################
-### Jose Espinosa-Carrasco Group. April 2020                              ###
+### Jose Espinosa-Carrasco CB-CRG Group. April 2020                       ###
 #############################################################################
 ### Graphical parameters for ggplot                                       ###
 ### Publication quality plots                                             ### 
@@ -30,5 +30,4 @@ dailyInt_theme <- theme_update (
   panel.border = element_rect(colour = "black",fill=NA),
   panel.background = element_blank(),
   axis.line = element_line (colour = "black"),
-  #                   axis.ticks = element_blank())
   axis.ticks = element_blank())
