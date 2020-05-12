@@ -15,7 +15,7 @@
 ### Behavioral test (Three addiction-like criteria):
 
 **Persistence to response**: Non-reinforced active responses during the pellet-free period (10 min), when the box was 
-illuminated and signaling the unavailability of pellet delivery, were measured as a persistence of food- seeking 
+illuminated and signaling the unavailability of pellet delivery, were measured as a persistence of food-seeking 
 behavior. On the 3 consecutive days before the progressive ratio mice were scored.
 
 **Motivation**: The progressive ratio schedule of reinforcement was used to evaluate the motivation for the 
@@ -27,7 +27,7 @@ progressive ratio session was 5 h or until mice did not respond on any lever wit
 
 **Compulsivity**: Total number of shocks in the session of shock test (50 min)
 performed after the PR test, when each pellet delivered was associated with a punishment, were used to evaluate 
-compulsivity-like behavior, previously described as resistance to punishment5,50. Mice were placed in a 
+compulsivity-like behavior, previously described as resistance to punishment. Mice were placed in a 
 self-administration chamber without the metal sheet with holes and consequently with the grid floor exposed (contextual 
 cue). In this shock-session, mice were under a FR5 schedule of reinforcement during 50 min with two scheduled changes: 
 at the fourth active lever-response mice received only an electric footshock (0.18 mA, 2 s) without pellet delivery and 
@@ -40,3 +40,14 @@ considered positive for an addiction-like criterion when the score of the specif
 percentile of the normal distribution of the chocolate control group. Mice that achieved two or three addiction-like 
 criteria were considered addicted animals and mice that achieved 0 or 1 addiction-like criteria were considered 
 non-addicted animals.
+
+Other behavioral measures, not used to classify the mice:
+
+**Impulsivity**: Impulsivity. Number of non-reinforced active lever-presses during three consecutive daily time out 
+(10 s) after each pellet delivery. **Does this measure corresponds to the time-out of the FR5 after pellet delivery?**
+No corresponde a las sesiones diarias de self-administration.
+
+**Cognitive inflexibility**: ??
+
+**Flexibility**: ?? 
+
