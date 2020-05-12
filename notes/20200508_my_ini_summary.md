@@ -41,7 +41,56 @@ percentile of the normal distribution of the chocolate control group. Mice that 
 criteria were considered addicted animals and mice that achieved 0 or 1 addiction-like criteria were considered 
 non-addicted animals.
 
-Other behavioral measures, not used to classify the mice:
+They implemented other behavioral tests not used to classify the mice. They named the measures obtained from these tests 
+as phenotypic traits:
+
+### Reversal test:
+
+Based in a test used in cocaine addiction testing. A single session where the "meaning" of the levers is exchanged. 
+The active becomes the inactive and the inactive becomes active. The levers are placed in the same place just one behind 
+the other. Left and right. There is any cue, is just that when they press the previous inactive lever (now active) they
+don't get anything. They have to try the new active lever and then they get chocolate and a cue when they do a FR5.  
+
+### Shock test:
+
+Shock in the 4 and 5 response (lever press). Since the mice are used to perform a FR5, now suddeny on the FR4 they get 
+a shock. This shock should stop them of pressing the lever again. If they press the lever again the get another shock 
+but also a pellet. The very addicted mouse do not care and they measure the number of shocks they receive. This is 
+performed this way with a shock on FR4 to make the test more severe since it was developed with cocaine and in the case
+of the cocaine needs to be more severe. With food not really, but this way they perform the same paradigm (protocol).  
+but they do this way. During this test the floor of the cage is different so that mouse associate a context to the 
+an adversive stimulus (this is use the next day, see next point).
+
+*Note: This is the only session where something different is happening in FR4 all the others are FR5*
+
+###  Shock-induced supression test (Post-shock test-adversive learning conditioning):
+
+They put again the same floor that was used in the shock session. This way they can measure the adversive conditioning
+of the mice to respect to the shock. With cocaine and rats they use a light as the conditioning stimulus. But mice are
+less inteligent and it does not work to use different color lights. Is the contrary to the associative appetitive 
+learning with the light.
+
+### Cue-induced food seeking
+
+Is like a version of the reinstatement in a single session. The "long Reinstatment (cue-induced relapse)" consisted of 
+several sessions of extinction and single session of relapse. In this case, test consists in 60 minutes of extiction plus 30 minutes of 
+relapse (cue-induced reinstatement). It has a light that signals, and they search the light there is not pellet, it is 
+only induced by the light (thus cue-induced reinstatement) it is only induced by the light the control that has the 
+conditional stimulus on the behavior. In comparison with the cue-induced relapse is very short. This test take place 
+after the shock session.
+
+Is a longer protocol than in the previous experiment, 112 days. The **operant conditioning** takes place all along the 
+experiment at the beginning with a FR1 schedule and then with a FR5 schedule. At the beginning they assess the 
+**learning** with the initial criteria. They assess whether mice have achieved the operant conditioning. This means that 
+mice  have a stable behavior and that they can discriminate between the active and inactive lever. To this end, they use 
+measures such as the acquisition day, acquisition stability, acquisition discrimination index and number of reinforcers. 
+This assessment of the learning takes place just one time at the beginning of the experiment. Then what is repeated in 
+the early, mid and late period is the assessment of the addiction criteria or the phenotypics traits of addiction. FR1 is just 
+done once, also if they have acquired (acquisition) only at the beginning.
+ 
+Around day 18 the first classification is performed (**early period**). Here they perform primarily the three test of 
+the three criteria (**pellet free period**, **motivation with the progresive ratio** and 
+**compulsivity with the schock**). The rest of the test are additional (** 
 
 **Impulsivity**: Impulsivity. Number of non-reinforced active lever-presses during three consecutive daily time out 
 (10 s) after each pellet delivery. **Does this measure corresponds to the time-out of the FR5 after pellet delivery?**
