@@ -224,6 +224,7 @@ p_circle_points <- ggplot(circle_plot_annotation_merged,) +
 # p_circle_points_leg <- p_circle_points + theme(legend.text = element_text(size = 20))
 
 p_circle_points_coord_fixed <-p_circle_points + coord_fixed()
+p_circle_points_coord_fixed
 
 # plot_name <- "PCA_factors_addiction"
 plot_name <- "PCA_factors_addiction_1st_analysis_PCA_selection_variables"
