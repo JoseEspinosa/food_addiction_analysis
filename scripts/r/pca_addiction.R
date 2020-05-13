@@ -22,8 +22,6 @@ home <- Sys.getenv("HOME")
 # Loading functions:
 source ("./scripts/r/graph_parameters.R")
 
-# data_reinst <- read.csv (paste (home, "/old_data/data/Matrix 16_10_15 for CPA Reinstatement.csv", sep=""), dec=",", sep=";")
-
 # Parameter to set plot qualities
 save_plot = FALSE
 
@@ -41,17 +39,19 @@ data <- read.csv (file_path,
                   na.strings = "NA",
                   stringsAsFactors = F)
 
-# reinst_annotation <- read.csv ("./data/annot_descriptors_18_05_16.csv", 
-#                                dec=",", sep=";", stringsAsFactors=FALSE)
-
 # reinst_annotation
 reinst_annotation <- read.csv ("./data/annot_descriptors_24_04_20.csv", 
-                               dec=",", sep=",", stringsAsFactors=FALSE)
+                               dec=",", 
+                               sep=",", 
+                               stringsAsFactors=FALSE)
 
 #### Join by Label_variable
 data_filtered <- NULL
+
 # Remove categorical
-# data_filtered <-subset (data, select=-c(Mice, Genotype, Food.pellets, 
+# data_filtered <-subset (data, select=-c(Mice, 
+#                                         Genotype,
+#                                         Food.pellets, 
 #                                         Addiction_categorization_LP,
 #                                         Appetitive_extinction_crit_EP, 
 #                                         Appetitive_extinction_crit_MP, 
@@ -69,7 +69,9 @@ data_filtered <- NULL
 
 data_filtered <- subset (data, select=-c(Mice, Genotype, Food.pellets, Addiction_categorization_LP)) 
 
-# data_filtered <- subset (data, select=-c(Mice, Genotype, Food.pellets, 
+# data_filtered <- subset (data, select=-c(Mice, 
+#                                          Genotype, 
+#                                          Food.pellets, 
 #                                          Addiction_categorization_LP, 
 #                                          Appetitive_extinction_crit_EP, 
 #                                          Appetitive_extinction_crit_MP,
@@ -84,49 +86,49 @@ data_filtered <- subset (data, select=-c(Mice, Genotype, Food.pellets, Addiction
 
 res = PCA (data_filtered, scale.unit=TRUE)
 
-head (data)
-
-
-# I set as vector with colors for all the plots I just have to set the number of colours that I need for the plots
+# I set a vector of colors for all the plots I just have to set the number of colours that I need for the plots
 v_colours <- c("red", "gray", "blue", "lightblue", "magenta", "orange", "darkgreen")
 cb_palette_adapt <- rep(c("#999999", "#009E73", "#0072B2","#E69F00", "#0072B2", "#D55E00", "#CC79A7"), 3)
+
 # Variance of PC1 and PC2
 var_PC1 <- round (res$eig [1,2], 1)
 var_PC2 <- round (res$eig [2,2], 1)
 var_PC3 <- round (res$eig [3,2], 1)
 
-# Coordinates are store here
-# res$ind$coord --- rownames(res$ind$coord)
+# PC coordinates are store here
+# Convert PCA results to data frame
 pca2plot <- as.data.frame (res$ind$coord)
 pca2plot$id <- data$Mice
+head(data)
 
-# Changes labels of the groups
+# Changes labels of the groups, some mice are categorized as addicted and the rest as NA (non-addicted)
 data$Addiction_categorization_LP[is.na(data$Addiction_categorization_LP)]  <- "N"
 pca2plot$group <- data$Addiction_categorization_LP
 
 title_p <- paste ("PCA addiction\n", sep="")
 
 pca_addiction <- ggplot (pca2plot, aes(x=Dim.1, y=Dim.2, colour=group)) + 
-  geom_point (size = 3.5, show.legend = T) + 
-  scale_color_manual(values=c("orange", "blue")) +
-  geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
-  theme(legend.key=element_rect(fill=NA)) +
-  scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
-  scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
-  labs(title = title_p, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
-       y=paste("PC2 (", var_PC2, "% of variance)\n", sep = "")) +
-  guides(colour = guide_legend(override.aes = list(size = 3)))+
-  theme(legend.key=element_rect(fill=NA))
-
-pca_addiction
+                 geom_point (size = 3.5, show.legend = T) + 
+                 scale_color_manual(values=c("orange", "blue")) +
+                 geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
+                 theme(legend.key=element_rect(fill=NA)) +
+                 scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
+                 scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
+                 labs(title = title_p, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
+                      y=paste("PC2 (", var_PC2, "% of variance)\n", sep = "")) +
+                 guides(colour = guide_legend(override.aes = list(size = 3)))+
+                 theme(legend.key=element_rect(fill=NA))
 
 # keeping aspect ratio
 pca_addiction_aspect_ratio <- pca_addiction + coord_fixed()
 extension_img <- ".png"
 
+
 if (save_plot) {
   ggsave (pca_addiction_aspect_ratio, file=paste('/home/kadomu/projects/20200421_pca_behavior_elena/results/',
           "PCA_addiction_1st_analysis_PCA_selection_variables", extension_img, sep=""), width = 10, height = 10, dpi=dpi_q)
+} else {
+  pca_addiction
 }
 
 ###############
@@ -146,9 +148,9 @@ pos_positions <- circle_plot_annotation_merged [which (circle_plot_annotation_me
 angle <- seq(-pi, pi, length = 50)
 df.circle <- data.frame(x = sin(angle), y = cos(angle))
 
-pos_positions_plot <- pos_positions
-pos_positions_plot$Dim.1 <- pos_positions$Dim.1 - 0.025
-pos_positions_plot$Dim.2 <- pos_positions$Dim.2 + 0.02
+# pos_positions_plot <- pos_positions
+# pos_positions_plot$Dim.1 <- pos_positions$Dim.1 - 0.025
+# pos_positions_plot$Dim.2 <- pos_positions$Dim.2 + 0.02
 
 neg_positions_plot <- neg_positions
 neg_positions_plot$Dim.1 <- neg_positions$Dim.1 #- 0.01
@@ -158,8 +160,9 @@ p_circle_plot <- ggplot(circle_plot_annotation_merged) +
   geom_segment (data=circle_plot, aes(x=0, y=0, xend=Dim.1, yend=Dim.2), 
                 arrow=arrow(length=unit(0.2,"cm")), alpha=1, size=1, colour="red") +
   xlim (c(-1.2, 1.2)) + ylim (c(-1.2, 1.2)) +
-  geom_text (data=neg_positions_plot, aes (x=Dim.1, y=Dim.2, label=neg_labels, hjust=1.2), show.legend = FALSE, size=size_text_circle) +
-  geom_text (data=pos_positions_plot, aes (x=Dim.1, y=Dim.2, label=pos_labels, hjust=-0.3), show.legend = FALSE, size=size_text_circle) +
+  # geom_text (data=neg_positions_plot, aes (x=Dim.1, y=Dim.2, label=neg_labels, hjust=1.2), show.legend = FALSE, size=size_text_circle) +
+  # geom_text (data=pos_positions_plot, aes (x=Dim.1, y=Dim.2, label=pos_labels, hjust=-0.3), show.legend = FALSE, size=size_text_circle) +
+  geom_text (data=pos_positions_plot, aes (x=Dim.1, y=Dim.2, label=pos_labels, hjust=-0.1), show.legend = FALSE, size=size_text_circle) +
   geom_vline (xintercept = 0, linetype="dotted") +
   geom_hline (yintercept=0, linetype="dotted") +
   labs (title = title_var_loadings, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
@@ -168,16 +171,18 @@ p_circle_plot <- ggplot(circle_plot_annotation_merged) +
 #   theme(axis.title.x = element_text(size = size_axis)) +
 #   theme(axis.title.y = element_text(size = size_axis))
 
-p_circle_plot
-
 p_circle_plot_coord_fixed <- p_circle_plot + coord_fixed() #+ 
 #   theme(plot.title = element_text(size=22)) + 
 #   theme(axis.title.x = element_text(size =22)) +
 #   theme(axis.title.y = element_text(size =22))
 p_circle_plot_coord_fixed
 
-# ggsave (p_circle_plot_coord_fixed, file=paste(home, dir_plots, "circle_annotated_behavior", img_format, sep=""), 
-#         width = 15, height = 15, dpi=dpi_q)
+if (save_plot) {
+  ggsave (p_circle_plot_coord_fixed, file=paste(home, dir_plots, "circle_annotated_behavior", img_format, sep=""),
+          width = 15, height = 15, dpi=dpi_q)
+} else {
+  p_circle_plot_coord_fixed 
+}
 
 ## Plotting by type of behavioral annotation
 circle_plot_annotation_merged$Annotation
@@ -219,13 +224,14 @@ p_circle_points <- ggplot(circle_plot_annotation_merged,) +
 # p_circle_points_leg <- p_circle_points + theme(legend.text = element_text(size = 20))
 
 p_circle_points_coord_fixed <-p_circle_points + coord_fixed()
-p_circle_points_coord_fixed
 
 # plot_name <- "PCA_factors_addiction"
 plot_name <- "PCA_factors_addiction_1st_analysis_PCA_selection_variables"
 if (save_plot) {
   ggsave (p_circle_points_coord_fixed, file=paste('/home/kadomu/projects/20200421_pca_behavior_elena/results/',
                                                plot_name, extension_img, sep=""), width = 15, height = 15, dpi=dpi_q)
+} else {
+  p_circle_points_coord_fixed
 }
 
 
