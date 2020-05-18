@@ -27,8 +27,10 @@ save_plot = FALSE
 
 dpi_q <- 100
 size_text_circle <- 5.5
-title_var_loadings =  "\nVariables factor map\n" 
-
+title_var_loadings <- "\nVariables factor map\n" 
+out_folder <- "./figures/"  
+name_out <- "var_behavioral_test"
+extension_img <- ".png"
 # file_path <- "./data/tbl_PCA_all_variables.csv"
 # file_path <- "./data/tbl_PCA_main_variables.csv"
 # file_path <- './data/20200429_tbl_1st_analysis_PCA_selection_variables.csv'
@@ -105,9 +107,10 @@ head(data)
 data$Addiction_categorization_LP[is.na(data$Addiction_categorization_LP)]  <- "N"
 pca2plot$group <- data$Addiction_categorization_LP
 
-title_p <- paste ("PCA addiction\n", sep="")
+## PC1 vs. PC3
+title_p <- paste ("PCA addiction, PC1 vs. PC2\n", sep="")
 
-pca_addiction <- ggplot (pca2plot, aes(x=Dim.1, y=Dim.2, colour=group)) + 
+pca_addiction_PC1_PC2 <- ggplot (pca2plot, aes(x=Dim.1, y=Dim.2, colour=group)) + 
                  geom_point (size = 3.5, show.legend = T) + 
                  scale_color_manual(values=c("orange", "blue")) +
                  geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
@@ -120,14 +123,66 @@ pca_addiction <- ggplot (pca2plot, aes(x=Dim.1, y=Dim.2, colour=group)) +
                  theme(legend.key=element_rect(fill=NA))
 
 # keeping aspect ratio
-pca_addiction_aspect_ratio <- pca_addiction + coord_fixed()
-extension_img <- ".png"
+pca_addiction_PC1_PC2_aspect_ratio <- pca_addiction_PC1_PC2 + coord_fixed()
 
 if (save_plot) {
-  ggsave (pca_addiction_aspect_ratio, file=paste('/home/kadomu/projects/20200421_pca_behavior_elena/results/',
-          "PCA_addiction_1st_analysis_PCA_selection_variables", extension_img, sep=""), width = 10, height = 10, dpi=dpi_q)
+  ggsave (pca_addiction_PC1_PC2_aspect_ratio, 
+          file=paste(out_folder, name_out, "_PCA_PC1_vs_PC2", extension_img, sep=""), 
+          width = 10, height = 10, dpi=dpi_q)
 } else {
-  pca_addiction
+  pca_addiction_PC1_PC2_aspect_ratio
+}
+
+## PC1 vs. PC3
+title_p <- paste ("PCA addiction, PC1 vs. PC3\n", sep="")
+
+pca_addiction_PC1_PC3 <- ggplot (pca2plot, aes(x=Dim.1, y=Dim.3, colour=group)) + 
+  geom_point (size = 3.5, show.legend = T) + 
+  scale_color_manual(values=c("orange", "blue")) +
+  geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
+  theme(legend.key=element_rect(fill=NA)) +
+  scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
+  scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
+  labs(title = title_p, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
+       y=paste("PC3 (", var_PC3, "% of variance)\n", sep = "")) +
+  guides(colour = guide_legend(override.aes = list(size = 3)))+
+  theme(legend.key=element_rect(fill=NA))
+
+# keeping aspect ratio
+pca_addiction_PC1_PC3_aspect_ratio <- pca_addiction_PC1_PC3 + coord_fixed()
+
+if (save_plot) {
+  ggsave (pca_addiction_PC1_PC3_aspect_ratio, 
+          file=paste(out_folder, name_out, "_PCA_PC1_vs_PC3", extension_img, sep=""), 
+          width = 10, height = 10, dpi=dpi_q)
+} else {
+  pca_addiction_PC1_PC3_aspect_ratio
+}
+
+## PC2 vs. PC3
+title_p <- paste ("PCA addiction, PC2 vs. PC3\n", sep="")
+
+pca_addiction_PC2_PC3 <- ggplot (pca2plot, aes(x=Dim.2, y=Dim.3, colour=group)) + 
+  geom_point (size = 3.5, show.legend = T) + 
+  scale_color_manual(values=c("orange", "blue")) +
+  geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
+  theme(legend.key=element_rect(fill=NA)) +
+  scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
+  scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
+  labs(title = title_p, x = paste("\nPC2 (", var_PC2, "% of variance)", sep=""), 
+       y=paste("PC3 (", var_PC3, "% of variance)\n", sep = "")) +
+  guides(colour = guide_legend(override.aes = list(size = 3)))+
+  theme(legend.key=element_rect(fill=NA))
+
+# keeping aspect ratio
+pca_addiction_PC2_PC3_aspect_ratio <- pca_addiction_PC2_PC3 + coord_fixed()
+
+if (save_plot) {
+  ggsave (pca_addiction_PC2_PC3_aspect_ratio, 
+          file=paste(out_folder, name_out, "_PCA_PC2_vs_PC3", extension_img, sep=""), 
+          width = 10, height = 10, dpi=dpi_q)
+} else {
+  pca_addiction_PC2_PC3_aspect_ratio
 }
 
 ###############
@@ -249,26 +304,29 @@ df.bars_to_plot$index <- factor(df.bars_to_plot$index, levels = df.bars_to_plot$
 threshold <- 2
 df.bars_to_plot <- df.bars_to_plot [df.bars_to_plot$value > threshold, ]
 
-title_b <- paste ("Variable contribution to PC1", "- presses during time-out\n", sep="")
-max_y <- ceiling(max(df.bars_to_plot$value) * 1.20)
+title_b_pc1 <- paste ("Variable contribution to PC1", "\n", sep="")
+max_y_pc1 <- ceiling(max(df.bars_to_plot$value) * 1.20)
+
 bars_plot <- ggplot (data=df.bars_to_plot, aes(x=index, y=value)) + 
-  ylim (c(0, max_y)) +
+  scale_y_continuous (name="", breaks=seq(0, max_y_pc1, 5), limits=c(0, max_y_pc1)) +
   geom_bar (stat="identity", fill="gray", width=0.8) + 
-  labs (title = title_b, x = "", y="Contribution in %\n") +
-  theme(axis.text.x=element_text(angle=45, vjust=1, hjust=1) )
-bars_plot
+  labs (title = title_b_pc1, x = "", y="Contribution in %\n") +
+  theme(axis.text.x=element_text(angle=45, vjust=1, hjust=1))
 
 if (save_plot) {
   ggsave (bars_plot, file=paste(home, "/old_data/figures/", 
                                 "bars_PC1_",  "impulsivity.tiff", sep=""), width = 15, height = 12, dpi=dpi_q)
+} else {
+  bars_plot
 }
-
+  
 # PC2
-title_b <- paste ("Variable contribution to PC2 - presses during time-out\n", sep="")
+title_b <- paste ("Variable contribution to PC2", "\n", sep="")
+
 df.bars_PC2 <- cbind (as.numeric(sort(res$var$coord[,2]^2/sum(res$var$coord[,2]^2)*100,decreasing=TRUE)), names(res$var$coord[,2])[order(res$var$coord[,2]^2,decreasing=TRUE)])
 df.bars_to_plot_PC2 <- as.data.frame(df.bars_PC2)
 df.bars_to_plot_PC2$index <- as.factor (df.bars_to_plot_PC2$V2)
-# class (df.bars_to_plot_PC2$V1)
+
 # df.bars_to_plot_PC2$value <- as.numeric(sort(res$var$coord[,2]^2/sum(res$var$coord[,2]^2)*100,decreasing=TRUE))
 df.bars_to_plot_PC2$value <- as.numeric(sort(res$var$coord[,2]^2/sum(res$var$coord[,2]^2)*100,decreasing=TRUE))
 
@@ -278,20 +336,24 @@ df.bars_to_plot_PC2 <- df.bars_to_plot_PC2 [df.bars_to_plot_PC2$value > threshol
 df.bars_to_plot_PC2$index
 df.bars_to_plot_PC2$index <- factor(df.bars_to_plot_PC2$index, levels = df.bars_to_plot_PC2$index[order(df.bars_to_plot_PC2$value, decreasing=TRUE)])
 
-bars_plot_PC2 <- ggplot (data=df.bars_to_plot_PC2, aes(x=index, y=value)) + 
-  geom_bar (stat="identity", fill="gray", width=0.8) + 
-  labs (title = "Variable contribution to PC2\n", x = "", y="Contribution in %\n") +
-  theme (axis.text.x=element_text(angle=45, vjust=1, hjust=1))
+title_b_pc2 <- paste ("Variable contribution to PC2", "\n", sep="")
+max_y_pc2 <- ceiling(max(df.bars_to_plot_PC2$value) * 1.20)
 
-bars_plot_PC2
+bars_plot_PC2 <- ggplot (data=df.bars_to_plot_PC2, aes(x=index, y=value)) +
+  scale_y_continuous (name="", breaks=seq(0, max_y_pc2, 5), limits=c(0, max_y_pc2)) +
+  geom_bar (stat="identity", fill="gray", width=0.8) + 
+  labs (title = title_b_pc2, x = "", y="Contribution in %\n") +
+  theme (axis.text.x=element_text(angle=45, vjust=1, hjust=1))
 
 if (save_plot) {
   ggsave (bars_plot_PC2, file=paste(home, "/old_data/figures/", 
                                     "bars_PC2_",  phase, "Phase.tiff", sep=""), width = 15, height = 12, dpi=dpi_q)
+} else {
+  bars_plot_PC2
 }
 
 # PC3
-title_b <- paste ("Variable contribution to PC3 - presses during time-out\n", sep="")
+title_b <- paste ("Variable contribution to PC3", "\n", sep="")
 df.bars_PC3 <- cbind (as.numeric(sort(res$var$coord[,3]^2/sum(res$var$coord[,3]^2)*100,decreasing=TRUE)), names(res$var$coord[,3])[order(res$var$coord[,3]^2,decreasing=TRUE)])
 df.bars_to_plot_PC3 <- as.data.frame(df.bars_PC3)
 df.bars_to_plot_PC3$index <- as.factor (df.bars_to_plot_PC3$V2)
@@ -303,19 +365,21 @@ df.bars_to_plot_PC3 <- df.bars_to_plot_PC3 [df.bars_to_plot_PC3$value > threshol
 df.bars_to_plot_PC3$index
 df.bars_to_plot_PC3$index <- factor(df.bars_to_plot_PC3$index, levels = df.bars_to_plot_PC3$index[order(df.bars_to_plot_PC3$value, decreasing=TRUE)])
 
+title_b_pc3 <- paste ("Variable contribution to PC3", "\n", sep="")
+max_y_pc3 <- ceiling(max(df.bars_to_plot_PC3$value) * 1.20)
+
 # Variability explained by PC3
-var_PC3
-
-bars_plot_PC3 <- ggplot (data=df.bars_to_plot_PC3, aes(x=index, y=value)) + 
+bars_plot_PC3 <- ggplot (data=df.bars_to_plot_PC3, aes(x=index, y=value)) +
+  scale_y_continuous (name="", breaks=seq(0, max_y_pc3, 5), limits=c(0, max_y_pc3)) +
   geom_bar (stat="identity", fill="gray", width=0.8) + 
-  labs (title = "Variable contribution to PC3\n", x = "", y="Contribution in %\n") +
+  labs (title = title_b_pc3, x = "", y="Contribution in %\n") +
   theme (axis.text.x=element_text(angle=45, vjust=1, hjust=1))
-
-bars_plot_PC3
 
 if (save_plot) {
   ggsave (bars_plot_PC3, file=paste(home, "/old_data/figures/", 
                                     "bars_PC3_",  phase, "Phase.tiff", sep=""), width = 15, height = 12, dpi=dpi_q)
+} else {
+  bars_plot_PC3
 }
 
 
