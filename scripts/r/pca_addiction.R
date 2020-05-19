@@ -92,10 +92,14 @@ res = PCA (data_filtered, scale.unit=TRUE)
 v_colours <- c("red", "gray", "blue", "lightblue", "magenta", "orange", "darkgreen")
 cb_palette_adapt <- rep(c("#999999", "#009E73", "#0072B2","#E69F00", "#0072B2", "#D55E00", "#CC79A7"), 3)
 
-# Variance of PC1 and PC2
+# Variance of PCs
 var_PC1 <- round (res$eig [1,2], 1)
 var_PC2 <- round (res$eig [2,2], 1)
 var_PC3 <- round (res$eig [3,2], 1)
+var_PC4 <- round (res$eig [4,2], 1)
+var_PC5 <- round (res$eig [5,2], 1)
+var_PC6 <- round (res$eig [6,2], 1)
+var_PC7 <- round (res$eig [7,2], 1)
 
 # PC coordinates are store here
 # Convert PCA results to data frame
@@ -275,8 +279,35 @@ if (save_plot) {
 `$`(data_annotation , "Dim.1")
 # data_annotation [[ pc_x]]
 
+label_pc <- function (name_dim="Dim.1") {
+  return (switch(name_dim, 
+                 "Dim.1" = "PC1", 
+                 "Dim.2" = "PC2", 
+                 "Dim.3" = "PC3",
+                 "Dim.4" = "PC4",
+                 "Dim.5" = "PC5",
+                 "Dim.6" = "PC6",
+                 "Dim.7" = "PC7"))
+}
+
+var_pc <- function (name_dim="Dim.1") {
+  return (switch(name_dim, 
+                 "Dim.1" = var_PC1, 
+                 "Dim.2" = var_PC2,
+                 "Dim.3" = var_PC3,
+                 "Dim.4" = var_PC4,
+                 "Dim.5" = var_PC5,
+                 "Dim.6" = var_PC6,
+                 "Dim.7" = var_PC7))
+}
+
 ### Function
-circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grouping_var="Annotation") {
+circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grouping_var=FALSE) {
+  
+  label_axis_x <- label_pc (pc_x)
+  label_axis_y <- label_pc (pc_y)
+  var_x <- var_pc (pc_x)
+  var_y <- var_pc (pc_y)
   
   labels_v <- data_annotation$Variable
   neg_labels <- labels_v [which (data_annotation [[ pc_x ]] < 0)]
@@ -292,33 +323,60 @@ circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grou
 
   pos_positions_plot [[ pc_x]] <- pos_positions [[ pc_x]] - 0.025
   pos_positions_plot [[ pc_y]] <- pos_positions [[ pc_y]] - 0.02
-
+  
+  neg_positions_plot <- neg_positions
   neg_positions_plot [[ pc_x]] <- neg_positions [[ pc_x]] - 0.01
   neg_positions_plot [[ pc_y]] <- neg_positions [[ pc_y]] - 0.05
-   
-  p_circle_plot_by_gr <- ggplot(data_annotation) +
-                          geom_segment (data=circle_plot_annotation_merged, 
-                                        aes_string (colour=grouping_var, x=0, y=0, xend=pc_x, yend=pc_y),
-                                        arrow=arrow(length=unit(0.35,"cm")), alpha=1, size=2) +
-                          scale_x_continuous(limits=c(-1.3, 1.3), breaks=(c(-1,0,1))) +
-                          scale_y_continuous(limits=c(-1.3, 1.3), breaks=(c(-1,0,1))) +
-                          scale_color_manual(values = cb_palette_adapt) +
-                          geom_text (data=neg_positions_plot, aes (x=get(pc_x), y=get(pc_y), hjust=0, label=neg_labels), show.legend = FALSE, size=size_text_circle) +
-                          geom_text (data=pos_positions_plot, aes (x=get(pc_x), y=get(pc_y), hjust=0, label=pos_labels), show.legend = FALSE, size=size_text_circle) +
-                          geom_vline (xintercept = 0, linetype="dotted") +
-                          geom_hline (yintercept=0, linetype="dotted") +
-                          labs (title = title_var_loadings, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""),
-                                y=paste("PC2 (", var_PC2, "% of variance)\n", sep = "")) +
-                          geom_polygon (data = df.circle, aes(x, y), alpha=1, colour="black", fill=NA, size=1) +
-                          guides(color=guide_legend(guide_legend(title = "Annotation"))) +
-                          theme (legend.key = element_blank()) + coord_fixed()
+  list_labels_pc <- list("color" = "red", "shape" = "square", "length" = 5)
   
-  return(p_circle_plot_by_gr)
+  if (grouping_var==FALSE){ 
+    p_circle_plot <- ggplot(data_annotation) + 
+      geom_segment (data=data_annotation, aes_string(x=0, y=0, xend=pc_x, yend=pc_y), 
+                    arrow=arrow(length=unit(0.2,"cm")), alpha=1, size=1, colour="red") +
+      xlim (c(-1.2, 1.2)) + ylim (c(-1.2, 1.2)) +
+      geom_text (data=neg_positions_plot, aes (x=get(pc_x), y=get(pc_y), label=neg_labels, hjust=0.1), show.legend = FALSE, size=size_text_circle) +
+      geom_text (data=pos_positions_plot, aes (x=get(pc_x), y=get(pc_y), label=pos_labels, hjust=0.1), show.legend = FALSE, size=size_text_circle) +
+      geom_vline (xintercept = 0, linetype="dotted") +
+      geom_hline (yintercept=0, linetype="dotted") +
+      labs (title = title_var_loadings, x = paste("\n", label_axis_x, "(", var_x, "% of variance)", sep=""), 
+            y=paste(label_axis_y, " (", var_y, "% of variance)\n", sep = "")) +
+      geom_polygon (data = df.circle, aes(x, y), alpha=1, colour="black", fill=NA, size=1) +
+      coord_fixed()
+    return(p_circle_plot) 
+  } else {
+    p_circle_plot_by_gr <- ggplot(data_annotation) +
+                            geom_segment (data=circle_plot_annotation_merged, 
+                                          aes_string (colour=grouping_var, x=0, y=0, xend=pc_x, yend=pc_y),
+                                          arrow=arrow(length=unit(0.35,"cm")), alpha=1, size=2) +
+                            scale_x_continuous(limits=c(-1.3, 1.3), breaks=(c(-1,0,1))) +
+                            scale_y_continuous(limits=c(-1.3, 1.3), breaks=(c(-1,0,1))) +
+                            scale_color_manual(values = cb_palette_adapt) +
+                            geom_text (data=neg_positions_plot, aes (x=get(pc_x), y=get(pc_y), hjust=0, label=neg_labels), show.legend = FALSE, size=size_text_circle) +
+                            geom_text (data=pos_positions_plot, aes (x=get(pc_x), y=get(pc_y), hjust=0, label=pos_labels), show.legend = FALSE, size=size_text_circle) +
+                            geom_vline (xintercept = 0, linetype="dotted") +
+                            geom_hline (yintercept=0, linetype="dotted") +
+                            labs (title = title_var_loadings, x = paste("\n", label_axis_x, "(", var_x, "% of variance)", sep=""),
+                                  y=paste(label_axis_y, " (", var_y, "% of variance)\n", sep = "")) +
+                            geom_polygon (data = df.circle, aes(x, y), alpha=1, colour="black", fill=NA, size=1) +
+                            guides(color=guide_legend(guide_legend(title = "Annotation"))) +
+                            theme (legend.key = element_blank()) + 
+                            coord_fixed()
+    
+    return(p_circle_plot_by_gr) 
+  }
 }
 
-circle_plot_by_behavior <- circle_plot_by_gr(data_annotation)
+circle_plot_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged)
+circle_plot_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3")
+circle_plot_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3")
 
+circle_plot_by_behavior_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Annotation")
+circle_plot_by_behavior_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Annotation")
+circle_plot_by_behavior_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Annotation")
 
+circle_plot_by_period_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Period")
+circle_plot_by_period_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Period")
+circle_plot_by_period_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Period")
 
 ####################################
 ## Same thing but without arrows
