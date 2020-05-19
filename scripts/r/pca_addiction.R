@@ -47,10 +47,10 @@ data <- read.csv (file_path,
                   stringsAsFactors = F)
 
 # reinst_annotation
-# reinst_annotation <- read.csv ("./data/annot_descriptors_24_04_20.csv", 
-#                                dec=",", 
-#                                sep=",", 
-#                                stringsAsFactors=FALSE)
+reinst_annotation <- read.csv ("./data/annot_descriptors_24_04_20.csv",
+                               dec=",",
+                               sep=",",
+                               stringsAsFactors=FALSE)
 
 ## Remove variables that all tables have
 data_filtered <- subset (data, select=-c(Mice, 
@@ -229,7 +229,6 @@ if (save_plot) {
   pca_addiction_PC2_PC3_aspect_ratio
 }
 
-###############
 ### Circle Plot
 circle_plot <- as.data.frame (res$var$coord)
 circle_plot$var <- rownames (circle_plot)
@@ -237,88 +236,13 @@ circle_plot$var <- rownames (circle_plot)
 
 # merging with annotation tbl
 circle_plot_annotation_merged <- merge (circle_plot, reinst_annotation, by.x= "var", by.y = "Label_variable")
-labels_v <- circle_plot_annotation_merged$Variable
-neg_labels <- labels_v [which (circle_plot_annotation_merged$Dim.1 < 0)]
-neg_positions <- circle_plot_annotation_merged [which (circle_plot_annotation_merged$Dim.1 < 0), c("Dim.1", "Dim.2")]
-
-pos_labels <- labels_v [which (circle_plot_annotation_merged$Dim.1 >= 0)]
-pos_positions <- circle_plot_annotation_merged [which (circle_plot_annotation_merged$Dim.1 >= 0), c("Dim.1", "Dim.2")]
-
-angle <- seq(-pi, pi, length = 50)
-df.circle <- data.frame(x = sin(angle), y = cos(angle))
-
-pos_positions_plot <- pos_positions
-pos_positions_plot$Dim.1 <- pos_positions$Dim.1 - 0.025
-pos_positions_plot$Dim.2 <- pos_positions$Dim.2 + 0.02
-
-neg_positions_plot <- neg_positions
-neg_positions_plot$Dim.1 <- neg_positions$Dim.1 #- 0.01
-neg_positions_plot$Dim.2 <- neg_positions$Dim.2 + 0.05
-
-p_circle_plot_PC1_PC2 <- ggplot(circle_plot_annotation_merged) + 
-  geom_segment (data=circle_plot, aes(x=0, y=0, xend=Dim.1, yend=Dim.2), 
-                arrow=arrow(length=unit(0.2,"cm")), alpha=1, size=1, colour="red") +
-  xlim (c(-1.2, 1.2)) + ylim (c(-1.2, 1.2)) +
-  # geom_text (data=neg_positions_plot, aes (x=Dim.1, y=Dim.2, label=neg_labels, hjust=1.2), show.legend = FALSE, size=size_text_circle) +
-  geom_text (data=neg_positions_plot, aes (x=Dim.1, y=Dim.2, label=neg_labels, hjust=0.1), show.legend = FALSE, size=size_text_circle) +
-  # geom_text (data=pos_positions_plot, aes (x=Dim.1, y=Dim.2, label=pos_labels, hjust=-0.3), show.legend = FALSE, size=size_text_circle) +
-  geom_text (data=pos_positions_plot, aes (x=Dim.1, y=Dim.2, label=pos_labels, hjust=0.1), show.legend = FALSE, size=size_text_circle) +
-  geom_vline (xintercept = 0, linetype="dotted") +
-  geom_hline (yintercept=0, linetype="dotted") +
-  labs (title = title_var_loadings, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
-        y=paste("PC2 (", var_PC2, "% of variance)\n", sep = "")) +
-  geom_polygon (data = df.circle, aes(x, y), alpha=1, colour="black", fill=NA, size=1) #+
-#   theme(axis.title.x = element_text(size = size_axis)) +
-#   theme(axis.title.y = element_text(size = size_axis))
-
-p_circle_plot_PC1_PC2_coord_fixed <- p_circle_plot_PC1_PC2 + coord_fixed() #+ 
-#   theme(plot.title = element_text(size=22)) + 
-#   theme(axis.title.x = element_text(size =22)) +
-#   theme(axis.title.y = element_text(size =22))
-p_circle_plot_PC1_PC2_coord_fixed
-
-if (save_plot) {
-  ggsave (p_circle_plot_PC1_PC2_coord_fixed, 
-          file=paste(out_folder, name_out, "_circle_behavior_PC1_vs_PC2", extension_img, sep=""), 
-          width = 15, height = 15, dpi=dpi_q)
-} else {
-  p_circle_plot_PC1_PC2_coord_fixed
-}
-
-## Plotting by type of behavioral annotation
-circle_plot_annotation_merged$Annotation
-p_circle_plot_by_gr_PC1_PC2 <- ggplot(circle_plot_annotation_merged) + 
-  geom_segment (data=circle_plot_annotation_merged, aes_string(colour="Annotation", x=0, y=0, xend="Dim.1", yend="Dim.2"), 
-                arrow=arrow(length=unit(0.35,"cm")), alpha=1, size=2) +
-  scale_x_continuous(limits=c(-1.3, 1.3), breaks=(c(-1,0,1))) +
-  scale_y_continuous(limits=c(-1.3, 1.3), breaks=(c(-1,0,1))) +
-  #                        xlim (c(-1.2, 1.2)) + ylim (c(-1.2, 1.2)) +
-  scale_color_manual(values = cb_palette_adapt) +
-  geom_text (data=neg_positions_plot, aes (x=Dim.1, y=Dim.2, label=neg_labels, hjust=0), show.legend = FALSE, size=size_text_circle) + 
-  geom_text (data=pos_positions_plot, aes (x=Dim.1, y=Dim.2, label=pos_labels, hjust=0), show.legend = FALSE, size=size_text_circle) +
-  geom_vline (xintercept = 0, linetype="dotted") +
-  geom_hline (yintercept=0, linetype="dotted") +
-  labs (title = title_var_loadings, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
-        y=paste("PC2 (", var_PC2, "% of variance)\n", sep = "")) +
-  geom_polygon (data = df.circle, aes(x, y), alpha=1, colour="black", fill=NA, size=1) +
-  guides(color=guide_legend(guide_legend(title = "Annotation"))) +
-  theme (legend.key = element_blank()) + coord_fixed()
-
-p_circle_plot_by_gr_PC1_PC2
-
-if (save_plot) {
-  ggsave (p_circle_plot_by_gr_PC1_PC2, 
-          file=paste(out_folder, name_out, "_circle_behavior_by_group_PC1_vs_PC2", extension_img, sep=""), 
-          width = 15, height = 15, dpi=dpi_q)
-} else {
-  p_circle_plot_by_gr_PC1_PC2
-}
 
 # data_annotation  <- circle_plot_annotation_merged
 # neg_labels <- labels_v [which (data_annotation [[ "Dim.1"]] < 0)]
 `$`(data_annotation , "Dim.1")
 # data_annotation [[ pc_x]]
 
+## Functions to assign labels and variance
 label_pc <- function (name_dim="Dim.1") {
   return (switch(name_dim, 
                  "Dim.1" = "PC1", 
@@ -455,21 +379,6 @@ circle_plot_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged)
 circle_plot_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3")
 circle_plot_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3")
 
-circle_plot_by_behavior_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Annotation")
-circle_plot_by_behavior_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Annotation")
-circle_plot_by_behavior_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Annotation")
-
-# circle_plot_by_behavior_pc1_pc2_labels <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Annotation", gr_plot_type="labels")
-# circle_plot_by_behavior_pc1_pc3_labels <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Annotation", gr_plot_type="labels")
-# circle_plot_by_behavior_pc2_pc3_labels <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Annotation", gr_plot_type="labels")
-
-circle_plot_by_period_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Period")
-circle_plot_by_period_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Period")
-circle_plot_by_period_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Period")
-
-# plot_name <- "PCA_factors_addiction"
-# plot_name <- "PCA_factors_addiction_1st_analysis_PCA_selection_variables"
-
 if (save_plot) {
   ggsave (circle_plot_pc1_pc2,
           file=paste(out_folder, name_out, "_circle_PC1_vs_PC2", extension_img, sep=""), 
@@ -494,29 +403,69 @@ if (save_plot) {
   circle_plot_pc1_pc3
 }
 
-######## AQUI
+circle_plot_by_behavior_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Annotation")
+circle_plot_by_behavior_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Annotation")
+circle_plot_by_behavior_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Annotation")
+
 if (save_plot) {
-  ggsave (circle_plot_by_period_pc1_pc2,
-          file=paste(out_folder, name_out, "_by_period_circle_PC1_vs_PC2", extension_img, sep=""), 
+  ggsave (circle_plot_by_behavior_pc1_pc2, 
+          file=paste(out_folder, name_out, "_circle_behavior_PC1_vs_PC2", extension_img, sep=""), 
           width = 15, height = 15, dpi=dpi_q)
 } else {
   circle_plot_by_behavior_pc1_pc2
 }
 
 if (save_plot) {
-  ggsave (circle_plot_pc2_pc3,
-          file=paste(out_folder, name_out, "_circle_PC2_vs_PC3", extension_img, sep=""), 
+  ggsave (circle_plot_by_behavior_pc1_pc3, 
+          file=paste(out_folder, name_out, "_circle_behavior_PC1_vs_PC3", extension_img, sep=""), 
           width = 15, height = 15, dpi=dpi_q)
 } else {
-  circle_plot_pc2_pc3
+  circle_plot_by_behavior_pc1_pc3
 }
 
 if (save_plot) {
-  ggsave (circle_plot_pc1_pc3,
-          file=paste(out_folder, name_out, "_circle_PC1_vs_PC3", extension_img, sep=""), 
+  ggsave (circle_plot_by_behavior_pc2_pc3, 
+          file=paste(out_folder, name_out, "_circle_behavior_PC2_vs_PC3", extension_img, sep=""), 
           width = 15, height = 15, dpi=dpi_q)
 } else {
-  circle_plot_pc1_pc3
+  circle_plot_by_behavior_pc2_pc3
+}
+
+
+# circle_plot_by_behavior_pc1_pc2_labels <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Annotation", gr_plot_type="labels")
+# circle_plot_by_behavior_pc1_pc3_labels <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Annotation", gr_plot_type="labels")
+# circle_plot_by_behavior_pc2_pc3_labels <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Annotation", gr_plot_type="labels")
+
+circle_plot_by_period_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Period")
+circle_plot_by_period_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Period")
+circle_plot_by_period_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Period")
+
+# plot_name <- "PCA_factors_addiction"
+# plot_name <- "PCA_factors_addiction_1st_analysis_PCA_selection_variables"
+
+######## AQUI
+if (save_plot) {
+  ggsave (circle_plot_by_period_pc1_pc2, 
+          file=paste(out_folder, name_out, "_circle_period_PC1_vs_PC2", extension_img, sep=""), 
+          width = 15, height = 15, dpi=dpi_q)
+} else {
+  circle_plot_by_period_pc1_pc2
+}
+
+if (save_plot) {
+  ggsave (circle_plot_by_period_pc1_pc3, 
+          file=paste(out_folder, name_out, "_circle_period_PC1_vs_PC3", extension_img, sep=""), 
+          width = 15, height = 15, dpi=dpi_q)
+} else {
+  circle_plot_by_period_pc1_pc3
+}
+
+if (save_plot) {
+  ggsave (circle_plot_by_period_pc2_pc3, 
+          file=paste(out_folder, name_out, "_circle_period_PC2_vs_PC3", extension_img, sep=""), 
+          width = 15, height = 15, dpi=dpi_q)
+} else {
+  circle_plot_by_period_pc2_pc3
 }
 
 ############
