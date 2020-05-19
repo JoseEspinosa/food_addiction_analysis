@@ -302,7 +302,7 @@ var_pc <- function (name_dim="Dim.1") {
 }
 
 ### Function
-circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grouping_var=FALSE, gr_plot_type = "arrows") {
+circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grouping_var="Variable", gr_plot_type = "arrows") {
   
   label_axis_x <- label_pc (pc_x)
   label_axis_y <- label_pc (pc_y)
@@ -312,9 +312,11 @@ circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grou
   labels_v <- data_annotation$Variable
   neg_labels <- labels_v [which (data_annotation [[ pc_x ]] < 0)]
   neg_positions <- data_annotation [which (data_annotation [[ pc_x ]] < 0), c(pc_x, pc_y)]
+  neg_positions$Variable <- neg_labels
   
   pos_labels <- labels_v [which (data_annotation [[ pc_x ]] >= 0)]
   pos_positions <- data_annotation [which (data_annotation [[ pc_x ]] >= 0), c(pc_x, pc_y)]
+  pos_positions$Variable <- pos_labels
   
   angle <- seq(-pi, pi, length = 50)
   df.circle <- data.frame(x = sin(angle), y = cos(angle))
@@ -329,20 +331,37 @@ circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grou
   neg_positions_plot [[ pc_y]] <- neg_positions [[ pc_y]] - 0.05
   list_labels_pc <- list("color" = "red", "shape" = "square", "length" = 5)
   
-  if (grouping_var==FALSE) { 
-    
+  if (grouping_var=="Variable") { 
+    # data_annotation$Variable <- as.factor(data_annotation$Variable)
     p_circle_plot <- ggplot(data_annotation) + 
-      geom_segment (data=data_annotation, aes_string(x=0, y=0, xend=pc_x, yend=pc_y), 
-                    arrow=arrow(length=unit(0.2,"cm")), alpha=1, size=1, colour="red") +
+      # geom_segment (data=data_annotation, aes_string(x=0, y=0, xend=pc_x, yend=pc_y), 
+                    # arrow=arrow(length=unit(0.2,"cm")), alpha=1, size=1, colour="red") +
+      geom_segment (data=data_annotation, 
+                    aes_string(colour=grouping_var, x=0, y=0, xend=pc_x, yend=pc_y),
+                    arrow=arrow(length=unit(0.2,"cm")), 
+                    alpha=1, 
+                    size=1, 
+                    show.legend = FALSE) +
       xlim (c(-1.2, 1.2)) + ylim (c(-1.2, 1.2)) +
-      geom_text (data=neg_positions_plot, aes (x=get(pc_x), y=get(pc_y), label=neg_labels, hjust=0.1), show.legend = FALSE, size=size_text_circle) +
-      geom_text (data=pos_positions_plot, aes (x=get(pc_x), y=get(pc_y), label=pos_labels, hjust=0.1), show.legend = FALSE, size=size_text_circle) +
+      # geom_text (data=neg_positions_plot,
+      #            aes_string (colour=grouping_var, x=pc_x, y=pc_y, label=grouping_var, hjust=0.1),
+      #            show.legend = FALSE,
+      #            size=size_text_circle) +
+      # geom_text (data=pos_positions_plot,
+      #            aes_string (colour=grouping_var, x=pc_x, y=pc_y, label=grouping_var, hjust=0.1),
+      #            show.legend = FALSE,
+      #            size=size_text_circle) +
+      geom_text (data=data_annotation,
+                 aes_string (colour=grouping_var, x=pc_x, y=pc_y, label=grouping_var, hjust=0.1),
+                 show.legend = FALSE,
+                 size=size_text_circle) +
       geom_vline (xintercept = 0, linetype="dotted") +
-      geom_hline (yintercept=0, linetype="dotted") +
+      geom_hline (yintercept = 0, linetype="dotted") +
       labs (title = title_var_loadings, 
             x = paste("\n", label_axis_x, "(", var_x, "% of variance)", sep=""), 
             y=paste(label_axis_y, " (", var_y, "% of variance)\n", sep = "")) +
       geom_polygon (data = df.circle, aes(x, y), alpha=1, colour="black", fill=NA, size=1) +
+      scale_color_manual (values =  cb_palette_adapt) +
       coord_fixed()
     
     return(p_circle_plot) 
@@ -393,6 +412,8 @@ circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grou
 }
 
 circle_plot_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged)
+class (circle_plot_annotation_merged$Variable)
+circle_plot_pc1_pc2
 circle_plot_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3")
 circle_plot_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3")
 
@@ -438,7 +459,7 @@ pca_barPlot <- function (pca_coord="", sel_pc="Dim.1") {
 
   title_bars <- paste ("Variable contribution to ", label_pc, "\n", sep="")
   max_y <- ceiling(max(df.bars_to_plot$value) * 1.20)
-  print (df.bars_to_plot)
+  # print (df.bars_to_plot)
   bars_plot <- ggplot (data=df.bars_to_plot, aes(x=index, y=value)) + 
     scale_y_continuous (name="", breaks=seq(0, max_y, 5), limits=c(0, max_y)) +
     geom_bar (stat="identity", fill="gray", width=0.8) + 
@@ -452,119 +473,30 @@ bars_plot_pc1 <- pca_barPlot(res$var$coord, sel_pc="Dim.1")
 bars_plot_pc2 <- pca_barPlot(res$var$coord, sel_pc="Dim.2")
 bars_plot_pc3 <- pca_barPlot(res$var$coord, sel_pc="Dim.3")
 
-
-
-
-pca_coord  <- res$var$coord
-df.bars <- cbind (as.numeric(sort(pca_coord[,sel_pc]^2/sum(pca_coord[,sel_pc]^2)*100,decreasing=TRUE)), names(pca_coord[,sel_pc])[order(pca_coord[,sel_pc]^2,decreasing=TRUE)])
-
-df.bars_to_plot <- as.data.frame(df.bars)
-colnames (df.bars_to_plot) <- c("value", "index")
-
-df.bars_to_plot$value
-
-df.bars_to_plot$value <- as.numeric(sort(res$var$coord[,1]^2/sum(res$var$coord[,1]^2)*100,decreasing=TRUE))
-df.bars_to_plot$index <- factor(df.bars_to_plot$index, levels = df.bars_to_plot$index[order(df.bars_to_plot$value, decreasing=TRUE)])
-
-
-
-
-
-
-pca_barPlot(res$var$coord)
-df.bars <- cbind (as.numeric(sort(res$var$coord[,1]^2/sum(res$var$coord[,1]^2)*100,decreasing=TRUE)), names(res$var$coord[,1])[order(res$var$coord[,1]^2,decreasing=TRUE)])
-df.bars_to_plot <- as.data.frame(df.bars)
-df.bars_to_plot$index <- as.factor (df.bars_to_plot$V2)
-# class (df.bars_to_plot$V1)
-df.bars_to_plot$value <- as.numeric(sort(res$var$coord[,1]^2/sum(res$var$coord[,1]^2)*100,decreasing=TRUE))
-df.bars_to_plot$index <- factor(df.bars_to_plot$index, levels = df.bars_to_plot$index[order(df.bars_to_plot$value, decreasing=TRUE)])
-
-# PC1
-# Filtering only the top contributors more than 2 %
-threshold <- 2
-df.bars_to_plot <- df.bars_to_plot [df.bars_to_plot$value > threshold, ]
-
-title_b_pc1 <- paste ("Variable contribution to PC1", "\n", sep="")
-max_y_pc1 <- ceiling(max(df.bars_to_plot$value) * 1.20)
-
-bars_plot <- ggplot (data=df.bars_to_plot, aes(x=index, y=value)) + 
-  scale_y_continuous (name="", breaks=seq(0, max_y_pc1, 5), limits=c(0, max_y_pc1)) +
-  geom_bar (stat="identity", fill="gray", width=0.8) + 
-  labs (title = title_b_pc1, x = "", y="Contribution in %\n") +
-  theme(axis.text.x=element_text(angle=45, vjust=1, hjust=1))
+bars_plot_pc1 
+bars_plot_pc2
+bars_plot_pc3 
 
 if (save_plot) {
-  ggsave (bars_plot, file=paste(home, "/old_data/figures/", 
+  ggsave (bars_plot_pc1, file=paste(home, "/old_data/figures/", 
                                 "bars_PC1_",  "impulsivity.tiff", sep=""), width = 15, height = 12, dpi=dpi_q)
 } else {
-  bars_plot
+  bars_plot_pc1
 }
-  
-# PC2
-title_b <- paste ("Variable contribution to PC2", "\n", sep="")
-
-df.bars_PC2 <- cbind (as.numeric(sort(res$var$coord[,2]^2/sum(res$var$coord[,2]^2)*100,decreasing=TRUE)), names(res$var$coord[,2])[order(res$var$coord[,2]^2,decreasing=TRUE)])
-df.bars_to_plot_PC2 <- as.data.frame(df.bars_PC2)
-df.bars_to_plot_PC2$index <- as.factor (df.bars_to_plot_PC2$V2)
-
-# df.bars_to_plot_PC2$value <- as.numeric(sort(res$var$coord[,2]^2/sum(res$var$coord[,2]^2)*100,decreasing=TRUE))
-df.bars_to_plot_PC2$value <- as.numeric(sort(res$var$coord[,2]^2/sum(res$var$coord[,2]^2)*100,decreasing=TRUE))
-
-# Filtering only the top contributors more than 2 %
-threshold_pc2 <- 2
-df.bars_to_plot_PC2 <- df.bars_to_plot_PC2 [df.bars_to_plot_PC2$value > threshold_pc2, ]
-df.bars_to_plot_PC2$index
-df.bars_to_plot_PC2$index <- factor(df.bars_to_plot_PC2$index, levels = df.bars_to_plot_PC2$index[order(df.bars_to_plot_PC2$value, decreasing=TRUE)])
-
-title_b_pc2 <- paste ("Variable contribution to PC2", "\n", sep="")
-max_y_pc2 <- ceiling(max(df.bars_to_plot_PC2$value) * 1.20)
-
-bars_plot_PC2 <- ggplot (data=df.bars_to_plot_PC2, aes(x=index, y=value)) +
-  scale_y_continuous (name="", breaks=seq(0, max_y_pc2, 5), limits=c(0, max_y_pc2)) +
-  geom_bar (stat="identity", fill="gray", width=0.8) + 
-  labs (title = title_b_pc2, x = "", y="Contribution in %\n") +
-  theme (axis.text.x=element_text(angle=45, vjust=1, hjust=1))
 
 if (save_plot) {
   ggsave (bars_plot_PC2, file=paste(home, "/old_data/figures/", 
                                     "bars_PC2_",  phase, "Phase.tiff", sep=""), width = 15, height = 12, dpi=dpi_q)
 } else {
-  bars_plot_PC2
+  bars_plot_pc2
 }
-
-# PC3
-title_b <- paste ("Variable contribution to PC3", "\n", sep="")
-df.bars_PC3 <- cbind (as.numeric(sort(res$var$coord[,3]^2/sum(res$var$coord[,3]^2)*100,decreasing=TRUE)), names(res$var$coord[,3])[order(res$var$coord[,3]^2,decreasing=TRUE)])
-df.bars_to_plot_PC3 <- as.data.frame(df.bars_PC3)
-df.bars_to_plot_PC3$index <- as.factor (df.bars_to_plot_PC3$V2)
-df.bars_to_plot_PC3$value <- as.numeric(sort(res$var$coord[,3]^2/sum(res$var$coord[,3]^2)*100,decreasing=TRUE))
-
-# Filtering only the top contributors more than 2 %
-threshold_pc3 <- 2
-df.bars_to_plot_PC3 <- df.bars_to_plot_PC3 [df.bars_to_plot_PC3$value > threshold_pc3, ]
-df.bars_to_plot_PC3$index
-df.bars_to_plot_PC3$index <- factor(df.bars_to_plot_PC3$index, levels = df.bars_to_plot_PC3$index[order(df.bars_to_plot_PC3$value, decreasing=TRUE)])
-
-title_b_pc3 <- paste ("Variable contribution to PC3", "\n", sep="")
-max_y_pc3 <- ceiling(max(df.bars_to_plot_PC3$value) * 1.20)
-
-# Variability explained by PC3
-bars_plot_PC3 <- ggplot (data=df.bars_to_plot_PC3, aes(x=index, y=value)) +
-  scale_y_continuous (name="", breaks=seq(0, max_y_pc3, 5), limits=c(0, max_y_pc3)) +
-  geom_bar (stat="identity", fill="gray", width=0.8) + 
-  labs (title = title_b_pc3, x = "", y="Contribution in %\n") +
-  theme (axis.text.x=element_text(angle=45, vjust=1, hjust=1))
 
 if (save_plot) {
-  ggsave (bars_plot_PC3, file=paste(home, "/old_data/figures/", 
+  ggsave (bars_plot_pc3, file=paste(home, "/old_data/figures/", 
                                     "bars_PC3_",  phase, "Phase.tiff", sep=""), width = 15, height = 12, dpi=dpi_q)
 } else {
-  bars_plot_PC3
+  bars_plot_pc3
 }
-
-
-
-
 
 
 
@@ -635,10 +567,11 @@ pos_labels <- labels_v [which (circle_plot$Dim.1 >= 0)]
 pos_positions <- circle_plot [which (circle_plot$Dim.1 >= 0), c(1,2,8)]
 
 title_c <- paste ("PCA of the variables ","- presses during time-out\n", sep="")
+
 p_circle_plot_colors <- ggplot(circle_plot) + 
   geom_segment (data=circle_plot, aes(colour=varGroup, x=0, y=0, xend=Dim.1, yend=Dim.2), 
                 arrow=arrow(length=unit(0.2,"cm")), alpha=1, size=1) +
-  scale_color_manual (values = v_colours) +
+  scale_color_manual (values =  cb_palette_adapt) +
   xlim (c(-1.2, 1.2)) + ylim (c(-1.2, 1.2)) +
   geom_text (data=neg_positions, aes (x=Dim.1, y=Dim.2, label=session, hjust=0.9, vjust=-0.4), 
              show.legend = FALSE, size=5) + 
