@@ -104,6 +104,60 @@ data_filtered <- subset (data, select=-c(Mice,
 #                                          Addiction_prediction_MP,
 #                                          Addiction_categorization_LP.1))
 
+
+pca_plot <- function (df_to_pca, pc_x="Dim.1", pc_y="Dim.2", id_samples=NA, annotation_v=NA) {
+  
+  res = PCA (data_filtered, scale.unit=TRUE)
+  cb_palette_mice <- c("#E69F00","#D55E00", "#56B4E9", "#009E73")
+  dim_name <- "Dim."
+  list_var <- list()
+  
+  # Variance of PCs
+  for (i in 1 : length(res$eig [,2])) {
+    id = paste0(dim_name, i)
+    list_var [[id]] <- round (res$eig [i,2], 1)
+    
+  }
+  
+  # print(list_var) #del
+  
+  # PC coordinates are store here
+  # Convert PCA results to data frame
+  pca2plot <- as.data.frame (res$ind$coord)
+  
+  if (!is.na(id_samples[1])) {
+    pca2plot$group <- id_samples
+  }
+  
+  pca2plot$id <- data$Mice
+
+  if (!is.na(annotation_v[1])) {
+    pca2plot$group <- annotation_v
+  }
+
+  print (pca2plot)
+}
+
+test <- NA
+test <- "d"
+if (!is.na(test)) {
+  print ("cccccccccccccccc")
+  }
+
+culo<- FALSE
+exists("culo")
+
+v_d <- FALSE
+
+annotation_v <- paste0(data$Addiction_categorization_LP, "_", data$Criteria_LP)
+pca_plot (data_filtered, id_samples=data$Mice, annotation_v=annotation_v)
+pca_plot (data_filtered)
+
+test <-NA
+
+test <- c(2,3)
+if (is.na(test)) {print ("culo")}
+
 res = PCA (data_filtered, scale.unit=TRUE)
 
 # I set a vector of colors for all the plots I just have to set the number of colours that I need for the plots
