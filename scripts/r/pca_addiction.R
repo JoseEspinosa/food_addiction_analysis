@@ -23,8 +23,12 @@ home <- Sys.getenv("HOME")
 source ("./scripts/r/graph_parameters.R")
 
 # Parameter to set plot qualities
-# save_plot = FALSE
-save_plot = TRUE
+save_plot = FALSE
+# save_plot = TRUE
+
+v_colours <- c("red", "gray", "blue", "lightblue", "magenta", "orange", "darkgreen")
+cb_palette_adapt <- rep(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7","#000000"), 3)
+cb_palette_mice <- c("#E69F00","#D55E00", "#56B4E9", "#009E73")
 
 dpi_q <- 100
 size_text_circle <- 5.5
@@ -124,36 +128,50 @@ label_pc <- function (name_dim="Dim.1") {
                  "Dim.7" = "PC7"))
 }
 
-var_pc <- function (name_dim="Dim.1") {
-  return (switch(name_dim, 
-                 "Dim.1" = var_PC1, 
-                 "Dim.2" = var_PC2,
-                 "Dim.3" = var_PC3,
-                 "Dim.4" = var_PC4,
-                 "Dim.5" = var_PC5,
-                 "Dim.6" = var_PC6,
-                 "Dim.7" = var_PC7))
+# Return a list with the variance for each of the PCs
+get_var_pcs <- function (pca_r) {
+  
+  list_v <- list()
+  dim_name <- "Dim."
+  # Variance of PCs
+  for (i in 1 : length(pca_r$eig [,2])) {
+    id = paste0(dim_name, i)
+    list_v [[id]] <- round (pca_r$eig [i,2], 1)
+  }
+  
+  return (list_v)
 }
 
-pca_plot <- function (df_to_pca, pc_x="Dim.1", pc_y="Dim.2", id_v=NA, group_v=NA, title_pca="", 
-                      min_x=NA, max_x=NA, min_y=NA, max_y=NA) {
+
+# var_pc <- function (name_dim="Dim.1") { #del
+#   return (switch(name_dim, 
+#                  "Dim.1" = var_PC1, 
+#                  "Dim.2" = var_PC2,
+#                  "Dim.3" = var_PC3,
+#                  "Dim.4" = var_PC4,
+#                  "Dim.5" = var_PC5,
+#                  "Dim.6" = var_PC6,
+#                  "Dim.7" = var_PC7))
+# }
+
+pca_plot <- function (pca_r, pc_x="Dim.1", pc_y="Dim.2", id_v=NA, group_v=NA, title_pca="", 
+                      min_x=NA, max_x=NA, min_y=NA, max_y=NA, list_variance=NA) {
   
-  res = PCA (data_filtered, scale.unit=TRUE)
   cb_palette <- c("#E69F00","#D55E00", "#56B4E9", "#009E73", "#999999", "#CC79A7")
   
-  list_var <- list()
   dim_name <- "Dim."
-  
-  # Variance of PCs
-  for (i in 1 : length(res$eig [,2])) {
-    id = paste0(dim_name, i)
-    list_var [[id]] <- round (res$eig [i,2], 1)
-    
-  }
   
   # PC coordinates are store here
   # Convert PCA results to data frame
-  pca2plot <- as.data.frame (res$ind$coord)
+  pca2plot <- as.data.frame (pca_r$ind$coord)
+  
+  list_var <- list()
+  
+  if (is.na(list_variance[[1]])) {
+    list_var <- get_var_pcs(pca_r)
+  } else {
+    list_var <- list_variance
+  }
   
   # Set axis minima and maxima
   if (is.na(min_x)) {
@@ -186,9 +204,8 @@ pca_plot <- function (df_to_pca, pc_x="Dim.1", pc_y="Dim.2", id_v=NA, group_v=NA
   }
   
   title_p <- paste(title_pca, label_pc(pc_x), "vs.", label_pc(pc_y), "\n", sep=" ")
-  print (title_p)
   title_x <- paste("\n", label_pc(pc_x), "(", list_var[[pc_x]], "% of variance)", sep="")
-  title_y <- paste(label_pc(pc_x), " (", list_var[[pc_y]], "% of variance)\n", sep = "")
+  title_y <- paste(label_pc(pc_y), " (", list_var[[pc_y]], "% of variance)\n", sep = "")
   
   pca_p <- ggplot (pca2plot, aes(x=get(pc_x), y=get(pc_y), colour=Group)) +
     geom_point (size = 3.5, show.legend = T) +
@@ -206,140 +223,161 @@ pca_plot <- function (df_to_pca, pc_x="Dim.1", pc_y="Dim.2", id_v=NA, group_v=NA
   return (pca_p)
 }
 
+res = PCA (data_filtered, scale.unit=TRUE)
 
-
-
+# Changes labels of the groups, some mice are categorized as addicted and the rest as NA (non-addicted)
+data$Addiction_categorization_LP[is.na(data$Addiction_categorization_LP)]  <- "N"
 group_mouse <- paste0(data$Addiction_categorization_LP, "_", data$Criteria_LP)
 group_mouse <- factor(group_mouse, levels = c("N_0", "N_1", "A_2", "A_3"))
 title_2_plot <- "PCA addiction"
 sample_id <- data$Mice
 
-pca_addiction_PC1_PC2 <- pca_plot (data_filtered, group_v=group_mouse, title_pca=title_2_plot, id_v = sample_id)
-pca_addiction_PC1_PC3 <- pca_plot (data_filtered, group_v=group_mouse, title_pca=title_2_plot, id_v = sample_id)
+list_var <- list()
+list_var <- get_var_pcs(res)
 
-
-pca_plot (data_filtered)
-
-
-
-res = PCA (data_filtered, scale.unit=TRUE)
-
-# I set a vector of colors for all the plots I just have to set the number of colours that I need for the plots
-v_colours <- c("red", "gray", "blue", "lightblue", "magenta", "orange", "darkgreen")
-cb_palette_adapt <- rep(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7","#000000"), 3)
-
-cb_palette_mice <- c("#E69F00","#D55E00", "#56B4E9", "#009E73")
-
-# Variance of PCs
-var_PC1 <- round (res$eig [1,2], 1)
-var_PC2 <- round (res$eig [2,2], 1)
-var_PC3 <- round (res$eig [3,2], 1)
-var_PC4 <- round (res$eig [4,2], 1)
-var_PC5 <- round (res$eig [5,2], 1)
-var_PC6 <- round (res$eig [6,2], 1)
-var_PC7 <- round (res$eig [7,2], 1)
-
-# PC coordinates are store here
-# Convert PCA results to data frame
-pca2plot <- as.data.frame (res$ind$coord)
-max(res$ind$coord)
-ceiling(min(pca2plot["Dim.1"],pca2plot["Dim.2"]))
-floor(min(pca2plot["Dim.1"],pca2plot["Dim.2"]))
-pca2plot$id <- data$Mice
-# head(data)
-
-# Changes labels of the groups, some mice are categorized as addicted and the rest as NA (non-addicted)
-data$Addiction_categorization_LP[is.na(data$Addiction_categorization_LP)]  <- "N"
-# pca2plot$group <- data$Addiction_categorization_LP
-pca2plot$group <- paste0 (data$Addiction_categorization_LP, "_", data$Criteria_LP)
-class(pca2plot$group)
-# pca2plot$group[order(pca2plot$group, decreasing=FALSE)]
-
-pca2plot$group <- factor(pca2plot$group, levels = c("N_0", "N_1", "A_2", "A_3"))
-
-## PC1 vs. PC3
-title_p <- paste ("PCA addiction, PC1 vs. PC2\n", sep="")
-
-pca_addiction_PC1_PC2 <- ggplot (pca2plot, aes(x=Dim.1, y=Dim.2, colour=group)) + 
-                 geom_point (size = 3.5, show.legend = T) + 
-                 # scale_color_manual(values=c("orange", "blue")) +
-                 # scale_color_manual (values=cb_palette_adapt) +
-                 scale_color_manual (values=cb_palette_mice) +
-                 geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
-                 theme(legend.key=element_rect(fill=NA)) +
-                 scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
-                 scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
-                 labs(title = title_p, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
-                      y=paste("PC2 (", var_PC2, "% of variance)\n", sep = "")) +
-                 guides(colour = guide_legend(override.aes = list(size = 3)))+
-                 theme(legend.key=element_rect(fill=NA))
-
-# keeping aspect ratio
-pca_addiction_PC1_PC2_aspect_ratio <- pca_addiction_PC1_PC2 + coord_fixed()
+pca_addiction_PC1_PC2 <- pca_plot (res, pc_x="Dim.1", pc_y="Dim.2", group_v=group_mouse, 
+                                   title_pca=title_2_plot, id_v = sample_id,
+                                   list_variance = list_var)
+pca_addiction_PC1_PC3 <- pca_plot (res, pc_x="Dim.1", pc_y="Dim.3", group_v=group_mouse, 
+                                   title_pca=title_2_plot, id_v = sample_id,
+                                   list_variance = list_var)
+pca_addiction_PC2_PC3 <- pca_plot (res, pc_x="Dim.2", pc_y="Dim.3", group_v=group_mouse, 
+                                   title_pca=title_2_plot, id_v = sample_id,
+                                   list_variance = list_var)
 
 if (save_plot) {
-  ggsave (pca_addiction_PC1_PC2_aspect_ratio, 
+  ggsave (pca_addiction_PC1_PC2, 
           file=paste(out_folder, name_out, "_PCA_PC1_vs_PC2", extension_img, sep=""), 
           width = 10, height = 10, dpi=dpi_q)
 } else {
-  pca_addiction_PC1_PC2_aspect_ratio
+  pca_addiction_PC1_PC2
 }
 
-## PC1 vs. PC3
-title_p <- paste ("PCA addiction, PC1 vs. PC3\n", sep="")
-
-pca_addiction_PC1_PC3 <- ggplot (pca2plot, aes(x=Dim.1, y=Dim.3, colour=group)) + 
-  geom_point (size = 3.5, show.legend = T) + 
-  # scale_color_manual(values=c("orange", "blue")) +
-  # scale_color_manual (values=cb_palette_adapt) +
-  scale_color_manual (values=cb_palette_mice) +
-  geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
-  theme(legend.key=element_rect(fill=NA)) +
-  scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
-  scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
-  labs(title = title_p, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
-       y=paste("PC3 (", var_PC3, "% of variance)\n", sep = "")) +
-  guides(colour = guide_legend(override.aes = list(size = 3)))+
-  theme(legend.key=element_rect(fill=NA))
-
-# keeping aspect ratio
-pca_addiction_PC1_PC3_aspect_ratio <- pca_addiction_PC1_PC3 + coord_fixed()
-
 if (save_plot) {
-  ggsave (pca_addiction_PC1_PC3_aspect_ratio, 
+  ggsave (pca_addiction_PC1_PC3, 
           file=paste(out_folder, name_out, "_PCA_PC1_vs_PC3", extension_img, sep=""), 
           width = 10, height = 10, dpi=dpi_q)
 } else {
-  pca_addiction_PC1_PC3_aspect_ratio
+  pca_addiction_PC1_PC3
 }
 
-## PC2 vs. PC3
-title_p <- paste ("PCA addiction, PC2 vs. PC3\n", sep="")
-
-pca_addiction_PC2_PC3 <- ggplot (pca2plot, aes(x=Dim.2, y=Dim.3, colour=group)) + 
-  geom_point (size = 3.5, show.legend = T) + 
-  # scale_color_manual(values=c("orange", "blue")) +
-  # scale_color_manual (values=cb_palette_adapt) +
-  scale_color_manual (values=cb_palette_mice) +
-  geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
-  theme(legend.key=element_rect(fill=NA)) +
-  scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
-  scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
-  labs(title = title_p, x = paste("\nPC2 (", var_PC2, "% of variance)", sep=""), 
-       y=paste("PC3 (", var_PC3, "% of variance)\n", sep = "")) +
-  guides(colour = guide_legend(override.aes = list(size = 3)))+
-  theme(legend.key=element_rect(fill=NA))
-
-# keeping aspect ratio
-pca_addiction_PC2_PC3_aspect_ratio <- pca_addiction_PC2_PC3 + coord_fixed()
-
 if (save_plot) {
-  ggsave (pca_addiction_PC2_PC3_aspect_ratio, 
+  ggsave (pca_addiction_PC2_PC3, 
           file=paste(out_folder, name_out, "_PCA_PC2_vs_PC3", extension_img, sep=""), 
           width = 10, height = 10, dpi=dpi_q)
 } else {
-  pca_addiction_PC2_PC3_aspect_ratio
+  pca_addiction_PC2_PC3
 }
+
+# I set a vector of colors for all the plots I just have to set the number of colours that I need for the plots
+
+# Variance of PCs
+# var_PC1 <- round (res$eig [1,2], 1)
+# var_PC2 <- round (res$eig [2,2], 1)
+# var_PC3 <- round (res$eig [3,2], 1)
+# var_PC4 <- round (res$eig [4,2], 1)
+# var_PC5 <- round (res$eig [5,2], 1)
+# var_PC6 <- round (res$eig [6,2], 1)
+# var_PC7 <- round (res$eig [7,2], 1)
+
+# PC coordinates are store here
+# Convert PCA results to data frame
+# pca2plot <- as.data.frame (res$ind$coord)
+# max(res$ind$coord)
+# ceiling(min(pca2plot["Dim.1"],pca2plot["Dim.2"]))
+# floor(min(pca2plot["Dim.1"],pca2plot["Dim.2"]))
+# pca2plot$id <- data$Mice
+# head(data)
+
+
+# class(pca2plot$group)
+# # pca2plot$group[order(pca2plot$group, decreasing=FALSE)]
+# 
+# pca2plot$group <- factor(pca2plot$group, levels = c("N_0", "N_1", "A_2", "A_3"))
+# 
+# ## PC1 vs. PC3
+# title_p <- paste ("PCA addiction, PC1 vs. PC2\n", sep="")
+# 
+# pca_addiction_PC1_PC2 <- ggplot (pca2plot, aes(x=Dim.1, y=Dim.2, colour=group)) + 
+#                  geom_point (size = 3.5, show.legend = T) + 
+#                  # scale_color_manual(values=c("orange", "blue")) +
+#                  # scale_color_manual (values=cb_palette_adapt) +
+#                  scale_color_manual (values=cb_palette_mice) +
+#                  geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
+#                  theme(legend.key=element_rect(fill=NA)) +
+#                  scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
+#                  scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
+#                  labs(title = title_p, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
+#                       y=paste("PC2 (", var_PC2, "% of variance)\n", sep = "")) +
+#                  guides(colour = guide_legend(override.aes = list(size = 3)))+
+#                  theme(legend.key=element_rect(fill=NA))
+# 
+# # keeping aspect ratio
+# pca_addiction_PC1_PC2_aspect_ratio <- pca_addiction_PC1_PC2 + coord_fixed()
+
+# if (save_plot) {
+#   ggsave (pca_addiction_PC1_PC2_aspect_ratio, 
+#           file=paste(out_folder, name_out, "_PCA_PC1_vs_PC2", extension_img, sep=""), 
+#           width = 10, height = 10, dpi=dpi_q)
+# } else {
+#   pca_addiction_PC1_PC2_aspect_ratio
+# }
+
+## PC1 vs. PC3
+# title_p <- paste ("PCA addiction, PC1 vs. PC3\n", sep="")
+# 
+# pca_addiction_PC1_PC3 <- ggplot (pca2plot, aes(x=Dim.1, y=Dim.3, colour=group)) + 
+#   geom_point (size = 3.5, show.legend = T) + 
+#   # scale_color_manual(values=c("orange", "blue")) +
+#   # scale_color_manual (values=cb_palette_adapt) +
+#   scale_color_manual (values=cb_palette_mice) +
+#   geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
+#   theme(legend.key=element_rect(fill=NA)) +
+#   scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
+#   scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
+#   labs(title = title_p, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
+#        y=paste("PC3 (", var_PC3, "% of variance)\n", sep = "")) +
+#   guides(colour = guide_legend(override.aes = list(size = 3)))+
+#   theme(legend.key=element_rect(fill=NA))
+# 
+# # keeping aspect ratio
+# pca_addiction_PC1_PC3_aspect_ratio <- pca_addiction_PC1_PC3 + coord_fixed()
+# 
+# if (save_plot) {
+#   ggsave (pca_addiction_PC1_PC3_aspect_ratio, 
+#           file=paste(out_folder, name_out, "_PCA_PC1_vs_PC3", extension_img, sep=""), 
+#           width = 10, height = 10, dpi=dpi_q)
+# } else {
+#   pca_addiction_PC1_PC3_aspect_ratio
+# }
+# 
+# ## PC2 vs. PC3
+# title_p <- paste ("PCA addiction, PC2 vs. PC3\n", sep="")
+# 
+# pca_addiction_PC2_PC3 <- ggplot (pca2plot, aes(x=Dim.2, y=Dim.3, colour=group)) + 
+#   geom_point (size = 3.5, show.legend = T) + 
+#   # scale_color_manual(values=c("orange", "blue")) +
+#   # scale_color_manual (values=cb_palette_adapt) +
+#   scale_color_manual (values=cb_palette_mice) +
+#   geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
+#   theme(legend.key=element_rect(fill=NA)) +
+#   scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
+#   scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
+#   labs(title = title_p, x = paste("\nPC2 (", var_PC2, "% of variance)", sep=""), 
+#        y=paste("PC3 (", var_PC3, "% of variance)\n", sep = "")) +
+#   guides(colour = guide_legend(override.aes = list(size = 3)))+
+#   theme(legend.key=element_rect(fill=NA))
+# 
+# # keeping aspect ratio
+# pca_addiction_PC2_PC3_aspect_ratio <- pca_addiction_PC2_PC3 + coord_fixed()
+# 
+# if (save_plot) {
+#   ggsave (pca_addiction_PC2_PC3_aspect_ratio, 
+#           file=paste(out_folder, name_out, "_PCA_PC2_vs_PC3", extension_img, sep=""), 
+#           width = 10, height = 10, dpi=dpi_q)
+# } else {
+#   pca_addiction_PC2_PC3_aspect_ratio
+# }
 
 ### Circle Plot
 circle_plot <- as.data.frame (res$var$coord)
@@ -351,16 +389,24 @@ circle_plot_annotation_merged <- merge (circle_plot, reinst_annotation, by.x= "v
 
 # data_annotation  <- circle_plot_annotation_merged
 # neg_labels <- labels_v [which (data_annotation [[ "Dim.1"]] < 0)]
-`$`(data_annotation , "Dim.1")
+# `$`(data_annotation , "Dim.1")
 # data_annotation [[ pc_x]]
 
 ### Function
-circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grouping_var="Variable", gr_plot_type = "arrows") {
+circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grouping_var="Variable", 
+                               list_variance=NA, gr_plot_type = "arrows") {
   
   label_axis_x <- label_pc (pc_x)
   label_axis_y <- label_pc (pc_y)
-  var_x <- var_pc (pc_x)
-  var_y <- var_pc (pc_y)
+  
+  # if (is.na(list_variance[[1]])) {
+  #   list_var <- get_var_pcs(pca_r)
+  # } else {
+  #   list_var <- list_variance
+  # }
+  
+  var_x <- list_variance [pc_x]
+  var_y <- list_variance [pc_y]
   
   labels_v <- data_annotation$Variable
   neg_labels <- labels_v [which (data_annotation [[ pc_x ]] < 0)]
@@ -464,9 +510,9 @@ circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grou
   }
 }
 
-circle_plot_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged)
-circle_plot_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3")
-circle_plot_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3")
+circle_plot_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged, list_variance = list_var)
+circle_plot_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", list_variance = list_var)
+circle_plot_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", list_variance = list_var)
 
 if (save_plot) {
   ggsave (circle_plot_pc1_pc2,
@@ -573,13 +619,12 @@ pca_barPlot <- function (pca_coord="", sel_pc="Dim.1") {
   df.bars_to_plot <- df.bars_to_plot [df.bars_to_plot$value > threshold, ]
   
   label_pc <- label_pc (sel_pc)
-  var_pc <- var_pc (sel_pc)
-
+  
   title_bars <- paste ("Variable contribution to ", label_pc, "\n", sep="")
   max_y <- ceiling(max(df.bars_to_plot$value) * 1.20)
   # print (df.bars_to_plot)
   bars_plot <- ggplot (data=df.bars_to_plot, aes(x=index, y=value)) + 
-    scale_y_continuous (name="", breaks=seq(0, max_y, 5), limits=c(0, max_y)) +
+    scale_y_continuous (breaks=seq(0, max_y, 5), limits=c(0, max_y)) +
     geom_bar (stat="identity", fill="gray", width=0.8) + 
     labs (title = title_bars, x = "", y="Contribution in %\n") +
     theme(axis.text.x=element_text(angle=45, vjust=1, hjust=1))
@@ -591,9 +636,9 @@ bars_plot_pc1 <- pca_barPlot(res$var$coord, sel_pc="Dim.1")
 bars_plot_pc2 <- pca_barPlot(res$var$coord, sel_pc="Dim.2")
 bars_plot_pc3 <- pca_barPlot(res$var$coord, sel_pc="Dim.3")
 
-bars_plot_pc1 
-bars_plot_pc2
-bars_plot_pc3 
+# bars_plot_pc1 
+# bars_plot_pc2
+# bars_plot_pc3 
 
 if (save_plot) {
   ggsave (bars_plot_pc1,
