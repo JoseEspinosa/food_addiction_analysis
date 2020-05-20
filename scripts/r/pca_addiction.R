@@ -61,6 +61,14 @@ data_filtered <- subset (data, select=-c(Mice,
                                          Criteria_MP,
                                          Criteria_LP)) 
 
+data_filtered <- subset (data, select=-c(Mice, 
+                                         Genotype, 
+                                         Food.pellets, 
+                                         Addiction_categorization_LP,
+                                         Criteria_EP,
+                                         Criteria_MP,
+                                         Criteria_LP)) 
+
 # # subset(dt, select = grep("bar|baz", names(dt)))
 # # phase <- "LP"
 # # phase <- "EP"
@@ -104,13 +112,37 @@ data_filtered <- subset (data, select=-c(Mice,
 #                                          Addiction_prediction_MP,
 #                                          Addiction_categorization_LP.1))
 
+## Functions to assign labels and variance
+label_pc <- function (name_dim="Dim.1") {
+  return (switch(name_dim, 
+                 "Dim.1" = "PC1", 
+                 "Dim.2" = "PC2", 
+                 "Dim.3" = "PC3",
+                 "Dim.4" = "PC4",
+                 "Dim.5" = "PC5",
+                 "Dim.6" = "PC6",
+                 "Dim.7" = "PC7"))
+}
 
-pca_plot <- function (df_to_pca, pc_x="Dim.1", pc_y="Dim.2", id_samples=NA, annotation_v=NA) {
+var_pc <- function (name_dim="Dim.1") {
+  return (switch(name_dim, 
+                 "Dim.1" = var_PC1, 
+                 "Dim.2" = var_PC2,
+                 "Dim.3" = var_PC3,
+                 "Dim.4" = var_PC4,
+                 "Dim.5" = var_PC5,
+                 "Dim.6" = var_PC6,
+                 "Dim.7" = var_PC7))
+}
+
+pca_plot <- function (df_to_pca, pc_x="Dim.1", pc_y="Dim.2", id_v=NA, group_v=NA, title_pca="", 
+                      min_x=NA, max_x=NA, min_y=NA, max_y=NA) {
   
   res = PCA (data_filtered, scale.unit=TRUE)
-  cb_palette_mice <- c("#E69F00","#D55E00", "#56B4E9", "#009E73")
-  dim_name <- "Dim."
+  cb_palette <- c("#E69F00","#D55E00", "#56B4E9", "#009E73", "#999999", "#CC79A7")
+  
   list_var <- list()
+  dim_name <- "Dim."
   
   # Variance of PCs
   for (i in 1 : length(res$eig [,2])) {
@@ -119,50 +151,82 @@ pca_plot <- function (df_to_pca, pc_x="Dim.1", pc_y="Dim.2", id_samples=NA, anno
     
   }
   
-  # print(list_var) #del
-  
   # PC coordinates are store here
   # Convert PCA results to data frame
   pca2plot <- as.data.frame (res$ind$coord)
   
-  if (!is.na(id_samples[1])) {
-    pca2plot$group <- id_samples
+  # Set axis minima and maxima
+  if (is.na(min_x)) {
+    min_x <- floor(min(pca2plot[pc_x]))
+  }
+  if (is.na(max_x)) {
+    max_x <- ceiling(max(pca2plot[pc_x]))
+  }
+  if (is.na(min_y)) {
+    min_y <- floor(min(pca2plot[pc_y]))
+  }
+  if (is.na(max_y)) {
+    max_y <- ceiling(max(pca2plot[pc_y]))
+  }
+
+  n_samples <- length (pca2plot[,1])
+  
+  if (!is.na(id_v[1])) {
+    pca2plot$id <- group_v
+  }
+  else {
+    pca2plot$id <- 1:n_samples
   }
   
-  pca2plot$id <- data$Mice
-
-  if (!is.na(annotation_v[1])) {
-    pca2plot$group <- annotation_v
+  if (!is.na(group_v[1])) {
+    pca2plot$Group <- group_v
   }
+  else {
+    pca2plot$Group <- "NA"
+  }
+  
+  title_p <- paste(title_pca, label_pc(pc_x), "vs.", label_pc(pc_y), "\n", sep=" ")
+  print (title_p)
+  title_x <- paste("\n", label_pc(pc_x), "(", list_var[[pc_x]], "% of variance)", sep="")
+  title_y <- paste(label_pc(pc_x), " (", list_var[[pc_y]], "% of variance)\n", sep = "")
+  
+  pca_p <- ggplot (pca2plot, aes(x=get(pc_x), y=get(pc_y), colour=Group)) +
+    geom_point (size = 3.5, show.legend = T) +
+    scale_color_manual (values=cb_palette) +
+    geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
+    theme(legend.key=element_rect(fill=NA)) +
+    scale_x_continuous (limits=c(min_x, max_x), breaks=min_x:max_x) +
+    scale_y_continuous (limits=c(min_y, max_y), breaks=min_y:max_y) +
+    labs(title = title_p, x =  title_x,
+         y=title_y) +
+    guides(colour = guide_legend(override.aes = list(size = 3)))+
+    theme(legend.key=element_rect(fill=NA)) +
+    coord_fixed()
 
-  print (pca2plot)
+  return (pca_p)
 }
 
-test <- NA
-test <- "d"
-if (!is.na(test)) {
-  print ("cccccccccccccccc")
-  }
 
-culo<- FALSE
-exists("culo")
 
-v_d <- FALSE
 
-annotation_v <- paste0(data$Addiction_categorization_LP, "_", data$Criteria_LP)
-pca_plot (data_filtered, id_samples=data$Mice, annotation_v=annotation_v)
+group_mouse <- paste0(data$Addiction_categorization_LP, "_", data$Criteria_LP)
+group_mouse <- factor(group_mouse, levels = c("N_0", "N_1", "A_2", "A_3"))
+title_2_plot <- "PCA addiction"
+sample_id <- data$Mice
+
+pca_addiction_PC1_PC2 <- pca_plot (data_filtered, group_v=group_mouse, title_pca=title_2_plot, id_v = sample_id)
+pca_addiction_PC1_PC3 <- pca_plot (data_filtered, group_v=group_mouse, title_pca=title_2_plot, id_v = sample_id)
+
+
 pca_plot (data_filtered)
 
-test <-NA
 
-test <- c(2,3)
-if (is.na(test)) {print ("culo")}
 
 res = PCA (data_filtered, scale.unit=TRUE)
 
 # I set a vector of colors for all the plots I just have to set the number of colours that I need for the plots
 v_colours <- c("red", "gray", "blue", "lightblue", "magenta", "orange", "darkgreen")
-cb_palette_adapt <- rep(c("#999999", "#009E73", "#0072B2","#E69F00", "#0072B2", "#D55E00", "#CC79A7"), 3)
+cb_palette_adapt <- rep(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7","#000000"), 3)
 
 cb_palette_mice <- c("#E69F00","#D55E00", "#56B4E9", "#009E73")
 
@@ -178,15 +242,18 @@ var_PC7 <- round (res$eig [7,2], 1)
 # PC coordinates are store here
 # Convert PCA results to data frame
 pca2plot <- as.data.frame (res$ind$coord)
+max(res$ind$coord)
+ceiling(min(pca2plot["Dim.1"],pca2plot["Dim.2"]))
+floor(min(pca2plot["Dim.1"],pca2plot["Dim.2"]))
 pca2plot$id <- data$Mice
 # head(data)
 
 # Changes labels of the groups, some mice are categorized as addicted and the rest as NA (non-addicted)
 data$Addiction_categorization_LP[is.na(data$Addiction_categorization_LP)]  <- "N"
 # pca2plot$group <- data$Addiction_categorization_LP
-pca2plot$group <- paste0(data$Addiction_categorization_LP, "_", data$Criteria_LP)
+pca2plot$group <- paste0 (data$Addiction_categorization_LP, "_", data$Criteria_LP)
 class(pca2plot$group)
-pca2plot$group[order(pca2plot$group, decreasing=FALSE)]
+# pca2plot$group[order(pca2plot$group, decreasing=FALSE)]
 
 pca2plot$group <- factor(pca2plot$group, levels = c("N_0", "N_1", "A_2", "A_3"))
 
@@ -286,29 +353,6 @@ circle_plot_annotation_merged <- merge (circle_plot, reinst_annotation, by.x= "v
 # neg_labels <- labels_v [which (data_annotation [[ "Dim.1"]] < 0)]
 `$`(data_annotation , "Dim.1")
 # data_annotation [[ pc_x]]
-
-## Functions to assign labels and variance
-label_pc <- function (name_dim="Dim.1") {
-  return (switch(name_dim, 
-                 "Dim.1" = "PC1", 
-                 "Dim.2" = "PC2", 
-                 "Dim.3" = "PC3",
-                 "Dim.4" = "PC4",
-                 "Dim.5" = "PC5",
-                 "Dim.6" = "PC6",
-                 "Dim.7" = "PC7"))
-}
-
-var_pc <- function (name_dim="Dim.1") {
-  return (switch(name_dim, 
-                 "Dim.1" = var_PC1, 
-                 "Dim.2" = var_PC2,
-                 "Dim.3" = var_PC3,
-                 "Dim.4" = var_PC4,
-                 "Dim.5" = var_PC5,
-                 "Dim.6" = var_PC6,
-                 "Dim.7" = var_PC7))
-}
 
 ### Function
 circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grouping_var="Variable", gr_plot_type = "arrows") {
