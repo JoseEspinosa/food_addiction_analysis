@@ -61,23 +61,14 @@ data_filtered <- subset (data, select=-c(Mice,
                                          Criteria_MP,
                                          Criteria_LP)) 
 
-# subset(dt, select = grep("bar|baz", names(dt)))
-phase <- "LP"
-# phase <- "EP"
+# # subset(dt, select = grep("bar|baz", names(dt)))
+# # phase <- "LP"
+# # phase <- "EP"
 # phase <- "MP"
-
-data_filtered <- subset(data, select = grep(phase, names(data)))
-names(data_filtered)
-data_filtered <- subset (data_filtered, select=-c(
-                                         Addiction_categorization_LP,
-                                         # Criteria_EP,
-                                         # Criteria_MP,
-                                         Criteria_LP))
-
-  
-
-out_folder <- paste0 ("./figures/var_behavioral_test_", phase, "/") 
-name_out <- paste0 ("var_behavioral_test_", phase)
+# data_filtered <- subset(data_filtered, select = grep(phase, names(data_filtered)))
+# names(data_filtered)
+# out_folder <- paste0 ("./figures/var_behavioral_test_", phase, "/") 
+# name_out <- paste0 ("var_behavioral_test_", phase)
 
 # Remove categorical
 # data_filtered <-subset (data, select=-c(Mice, 
