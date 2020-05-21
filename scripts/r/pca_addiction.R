@@ -154,9 +154,9 @@ data_filtered <- subset (data, select=-c(Mice,
                                          Criteria_LP)) 
 
 ## Plots by phase
-# # phase <- "LP"
+# phase <- "LP"
 # # phase <- "EP"
-# phase <- "MP"
+# # phase <- "MP"
 # data_filtered <- subset(data_filtered, select = grep(phase, names(data_filtered)))
 # out_folder <- paste0(path_assets, "/figures/var_behavioral_test_", phase, "/")
 # name_out <- paste0 ("var_behavioral_test_", phase)
@@ -257,7 +257,7 @@ pca_plot <- function (pca_r, pc_x="Dim.1", pc_y="Dim.2", id_v=NA, group_v=NA, ti
   n_samples <- length (pca2plot[,1])
   
   if (!is.na(id_v[1])) {
-    pca2plot$id <- group_v
+    pca2plot$id <- id_v
   }
   else {
     pca2plot$id <- 1:n_samples
