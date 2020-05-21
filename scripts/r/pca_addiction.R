@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 #############################################################################
 ### Jose A Espinosa. NPMMD/CB-CRG Group. Jan 2016                         ###
 #############################################################################
@@ -6,6 +8,81 @@
 ### This version was done when all the variables were not annotated and   ###
 ### it is the first version that includes impulsivity/compulsivity        ###
 #############################################################################
+
+#####################
+## VARIABLES
+## Reading arguments
+args <- commandArgs (TRUE)
+# write (paste0("...........................", getwd()), stdout())
+
+## Default setting when no arguments passed
+# if ( length(args) < 1) {
+#   args <- c("--help")
+# }
+
+## Help section
+if("--help" %in% args) {
+  cat("
+        pca_addiction
+        Arguments:
+        --path_tbl_pca=path          - character, path to read tbl files
+        --tbl_annotations=path       - character, tbl containing annotations
+        --plots                      - boolean
+        --image_format=image_format  - character
+        --help                       - print this text
+        Example:
+        ./pca_addiction.R --path_tbl_pca=\"tbl.txt\" --tbl_annotations=\"tbl_annotations.txt\" --plots\n")
+  
+  q (save="no")
+}
+
+## Use to parse arguments beginning by --
+parseArgs <- function(x)
+{
+  strsplit (sub ("^--", "", x), "=")
+}
+
+## Parsing arguments
+argsDF <- as.data.frame (do.call("rbind", parseArgs(args)))
+argsL <- as.list (as.character(argsDF$V2))
+names (argsL) <- argsDF$V1
+
+# path to variables bedgraph files
+{
+  if (is.null (argsL$path_tbl_pca))
+  {
+    write ("[Warning]: Path to table containing PCA table set to default", stderr())
+    path_tbl_pca <- '20200517_pca_behavioral_test.csv' 
+    # stop ("[FATAL]: Path to table containing data for the pca is mandatory")
+  }
+  else
+  {
+    path_tbl_pca <- argsL$path_tbl_pca
+  }
+}
+
+# path to table containing annotations
+{
+  if (is.null (argsL$path_tbl_annotations))
+  {
+    write ("[Warning]: Path to table containing annotations for plots set to default", stderr())
+    path_tbl_annotations <- "annot_descriptors_24_04_20.csv"
+  }
+  else
+  {
+    path_tbl_annotations <- argsL$path_tbl_annotations
+  }
+}
+{
+  if (is.null (argsL$plots))
+  {
+    save_plot = FALSE
+  }
+  else
+  {
+    save_plot = TRUE
+  }
+}
 
 #####################
 #####################
@@ -18,12 +95,15 @@ library(FactoMineR)
 
 ##Getting HOME directory 
 home <- Sys.getenv("HOME")
+pwd <- getwd()
 
 # Loading functions:
-source ("./scripts/r/graph_parameters.R")
+# source ("./scripts/r/graph_parameters.R")
+source (paste0 (pwd, "/graph_parameters.R"))
+
 
 # Parameter to set plot qualities
-save_plot = FALSE
+# save_plot = FALSE
 # save_plot = TRUE
 
 v_colours <- c("red", "gray", "blue", "lightblue", "magenta", "orange", "darkgreen")
@@ -33,16 +113,21 @@ cb_palette_mice <- c("#E69F00","#D55E00", "#56B4E9", "#009E73")
 dpi_q <- 100
 size_text_circle <- 5.5
 title_var_loadings <- "\nVariables factor map\n" 
-out_folder <- "./figures/" 
-out_folder <- "./figures/var_behavioral_test/" 
+
+path_assets <- paste0(home, "/git/food_addiction_analysis")
+
+# out_folder <- paste0(pwd, "./figures/") 
+out_folder <- paste0(path_assets, "/figures/var_behavioral_test/")
 
 name_out <- "var_behavioral_test"
 extension_img <- ".png"
 # file_path <- "./data/tbl_PCA_all_variables.csv"
 # file_path <- "./data/tbl_PCA_main_variables.csv"
 # file_path <- './data/20200429_tbl_1st_analysis_PCA_selection_variables.csv'
+
 ## Only variables used for the behavioral test 
-file_path <- './data/20200517_pca_behavioral_test.csv' 
+file_path <- paste0(path_assets, "/data/", path_tbl_pca)
+# file_path <- './data/20200517_pca_behavioral_test.csv' 
 
 data <- read.csv (file_path,
                   dec=".", 
@@ -51,7 +136,10 @@ data <- read.csv (file_path,
                   stringsAsFactors = F)
 
 # reinst_annotation
-reinst_annotation <- read.csv ("./data/annot_descriptors_24_04_20.csv",
+# path_tbl_annotations <- "./data/annot_descriptors_24_04_20.csv"
+path_tbl_annotations <- paste0(path_assets, "/data/", "annot_descriptors_24_04_20.csv")
+
+reinst_annotation <- read.csv (path_tbl_annotations,
                                dec=",",
                                sep=",",
                                stringsAsFactors=FALSE)
@@ -65,21 +153,13 @@ data_filtered <- subset (data, select=-c(Mice,
                                          Criteria_MP,
                                          Criteria_LP)) 
 
-data_filtered <- subset (data, select=-c(Mice, 
-                                         Genotype, 
-                                         Food.pellets, 
-                                         Addiction_categorization_LP,
-                                         Criteria_EP,
-                                         Criteria_MP,
-                                         Criteria_LP)) 
-
-# # subset(dt, select = grep("bar|baz", names(dt)))
-# # phase <- "LP"
-# # phase <- "EP"
-# phase <- "MP"
+## Plots by phase
+# phase <- "LP"
+# phase <- "EP"
+# # phase <- "MP"
 # data_filtered <- subset(data_filtered, select = grep(phase, names(data_filtered)))
 # names(data_filtered)
-# out_folder <- paste0 ("./figures/var_behavioral_test_", phase, "/") 
+# out_folder <- paste0(path_plots, "/var_behavioral_test_", phase, "/")
 # name_out <- paste0 ("var_behavioral_test_", phase)
 
 # Remove categorical
@@ -141,18 +221,6 @@ get_var_pcs <- function (pca_r) {
   
   return (list_v)
 }
-
-
-# var_pc <- function (name_dim="Dim.1") { #del
-#   return (switch(name_dim, 
-#                  "Dim.1" = var_PC1, 
-#                  "Dim.2" = var_PC2,
-#                  "Dim.3" = var_PC3,
-#                  "Dim.4" = var_PC4,
-#                  "Dim.5" = var_PC5,
-#                  "Dim.6" = var_PC6,
-#                  "Dim.7" = var_PC7))
-# }
 
 pca_plot <- function (pca_r, pc_x="Dim.1", pc_y="Dim.2", id_v=NA, group_v=NA, title_pca="", 
                       min_x=NA, max_x=NA, min_y=NA, max_y=NA, list_variance=NA) {
@@ -269,115 +337,6 @@ if (save_plot) {
   pca_addiction_PC2_PC3
 }
 
-# I set a vector of colors for all the plots I just have to set the number of colours that I need for the plots
-
-# Variance of PCs
-# var_PC1 <- round (res$eig [1,2], 1)
-# var_PC2 <- round (res$eig [2,2], 1)
-# var_PC3 <- round (res$eig [3,2], 1)
-# var_PC4 <- round (res$eig [4,2], 1)
-# var_PC5 <- round (res$eig [5,2], 1)
-# var_PC6 <- round (res$eig [6,2], 1)
-# var_PC7 <- round (res$eig [7,2], 1)
-
-# PC coordinates are store here
-# Convert PCA results to data frame
-# pca2plot <- as.data.frame (res$ind$coord)
-# max(res$ind$coord)
-# ceiling(min(pca2plot["Dim.1"],pca2plot["Dim.2"]))
-# floor(min(pca2plot["Dim.1"],pca2plot["Dim.2"]))
-# pca2plot$id <- data$Mice
-# head(data)
-
-
-# class(pca2plot$group)
-# # pca2plot$group[order(pca2plot$group, decreasing=FALSE)]
-# 
-# pca2plot$group <- factor(pca2plot$group, levels = c("N_0", "N_1", "A_2", "A_3"))
-# 
-# ## PC1 vs. PC3
-# title_p <- paste ("PCA addiction, PC1 vs. PC2\n", sep="")
-# 
-# pca_addiction_PC1_PC2 <- ggplot (pca2plot, aes(x=Dim.1, y=Dim.2, colour=group)) + 
-#                  geom_point (size = 3.5, show.legend = T) + 
-#                  # scale_color_manual(values=c("orange", "blue")) +
-#                  # scale_color_manual (values=cb_palette_adapt) +
-#                  scale_color_manual (values=cb_palette_mice) +
-#                  geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
-#                  theme(legend.key=element_rect(fill=NA)) +
-#                  scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
-#                  scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
-#                  labs(title = title_p, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
-#                       y=paste("PC2 (", var_PC2, "% of variance)\n", sep = "")) +
-#                  guides(colour = guide_legend(override.aes = list(size = 3)))+
-#                  theme(legend.key=element_rect(fill=NA))
-# 
-# # keeping aspect ratio
-# pca_addiction_PC1_PC2_aspect_ratio <- pca_addiction_PC1_PC2 + coord_fixed()
-
-# if (save_plot) {
-#   ggsave (pca_addiction_PC1_PC2_aspect_ratio, 
-#           file=paste(out_folder, name_out, "_PCA_PC1_vs_PC2", extension_img, sep=""), 
-#           width = 10, height = 10, dpi=dpi_q)
-# } else {
-#   pca_addiction_PC1_PC2_aspect_ratio
-# }
-
-## PC1 vs. PC3
-# title_p <- paste ("PCA addiction, PC1 vs. PC3\n", sep="")
-# 
-# pca_addiction_PC1_PC3 <- ggplot (pca2plot, aes(x=Dim.1, y=Dim.3, colour=group)) + 
-#   geom_point (size = 3.5, show.legend = T) + 
-#   # scale_color_manual(values=c("orange", "blue")) +
-#   # scale_color_manual (values=cb_palette_adapt) +
-#   scale_color_manual (values=cb_palette_mice) +
-#   geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
-#   theme(legend.key=element_rect(fill=NA)) +
-#   scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
-#   scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
-#   labs(title = title_p, x = paste("\nPC1 (", var_PC1, "% of variance)", sep=""), 
-#        y=paste("PC3 (", var_PC3, "% of variance)\n", sep = "")) +
-#   guides(colour = guide_legend(override.aes = list(size = 3)))+
-#   theme(legend.key=element_rect(fill=NA))
-# 
-# # keeping aspect ratio
-# pca_addiction_PC1_PC3_aspect_ratio <- pca_addiction_PC1_PC3 + coord_fixed()
-# 
-# if (save_plot) {
-#   ggsave (pca_addiction_PC1_PC3_aspect_ratio, 
-#           file=paste(out_folder, name_out, "_PCA_PC1_vs_PC3", extension_img, sep=""), 
-#           width = 10, height = 10, dpi=dpi_q)
-# } else {
-#   pca_addiction_PC1_PC3_aspect_ratio
-# }
-# 
-# ## PC2 vs. PC3
-# title_p <- paste ("PCA addiction, PC2 vs. PC3\n", sep="")
-# 
-# pca_addiction_PC2_PC3 <- ggplot (pca2plot, aes(x=Dim.2, y=Dim.3, colour=group)) + 
-#   geom_point (size = 3.5, show.legend = T) + 
-#   # scale_color_manual(values=c("orange", "blue")) +
-#   # scale_color_manual (values=cb_palette_adapt) +
-#   scale_color_manual (values=cb_palette_mice) +
-#   geom_text (aes(label=id), vjust=-0.5, hjust=1, size=4, show.legend = F)+
-#   theme(legend.key=element_rect(fill=NA)) +
-#   scale_x_continuous (limits=c(-10, 12), breaks=-10:12) + 
-#   scale_y_continuous (limits=c(-10, 12), breaks=-10:12) +
-#   labs(title = title_p, x = paste("\nPC2 (", var_PC2, "% of variance)", sep=""), 
-#        y=paste("PC3 (", var_PC3, "% of variance)\n", sep = "")) +
-#   guides(colour = guide_legend(override.aes = list(size = 3)))+
-#   theme(legend.key=element_rect(fill=NA))
-# 
-# # keeping aspect ratio
-# pca_addiction_PC2_PC3_aspect_ratio <- pca_addiction_PC2_PC3 + coord_fixed()
-# 
-# if (save_plot) {
-#   ggsave (pca_addiction_PC2_PC3_aspect_ratio, 
-#           file=paste(out_folder, name_out, "_PCA_PC2_vs_PC3", extension_img, sep=""), 
-#           width = 10, height = 10, dpi=dpi_q)
-# } else {
-#   pca_addiction_PC2_PC3_aspect_ratio
-# }
 
 ### Circle Plot
 circle_plot <- as.data.frame (res$var$coord)
@@ -387,13 +346,8 @@ circle_plot$var <- rownames (circle_plot)
 # merging with annotation tbl
 circle_plot_annotation_merged <- merge (circle_plot, reinst_annotation, by.x= "var", by.y = "Label_variable")
 
-# data_annotation  <- circle_plot_annotation_merged
-# neg_labels <- labels_v [which (data_annotation [[ "Dim.1"]] < 0)]
-# `$`(data_annotation , "Dim.1")
-# data_annotation [[ pc_x]]
-
 ### Function
-circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grouping_var="Variable", 
+circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grouping_var="var", 
                                list_variance=NA, gr_plot_type = "arrows") {
   
   label_axis_x <- label_pc (pc_x)
@@ -408,14 +362,14 @@ circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grou
   var_x <- list_variance [pc_x]
   var_y <- list_variance [pc_y]
   
-  labels_v <- data_annotation$Variable
+  labels_v <- data_annotation$var
   neg_labels <- labels_v [which (data_annotation [[ pc_x ]] < 0)]
   neg_positions <- data_annotation [which (data_annotation [[ pc_x ]] < 0), c(pc_x, pc_y)]
-  neg_positions$Variable <- neg_labels
+  neg_positions$var <- neg_labels
   
   pos_labels <- labels_v [which (data_annotation [[ pc_x ]] >= 0)]
   pos_positions <- data_annotation [which (data_annotation [[ pc_x ]] >= 0), c(pc_x, pc_y)]
-  pos_positions$Variable <- pos_labels
+  pos_positions$var <- pos_labels
   
   angle <- seq(-pi, pi, length = 50)
   df.circle <- data.frame(x = sin(angle), y = cos(angle))
@@ -430,8 +384,8 @@ circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grou
   neg_positions_plot [[ pc_y]] <- neg_positions [[ pc_y]] - 0.05
   list_labels_pc <- list("color" = "red", "shape" = "square", "length" = 5)
   
-  if (grouping_var=="Variable") { 
-    # data_annotation$Variable <- as.factor(data_annotation$Variable)
+  if (grouping_var=="var") { 
+    # data_annotation$var <- as.factor(data_annotation$var)
     p_circle_plot <- ggplot(data_annotation) + 
       # geom_segment (data=data_annotation, aes_string(x=0, y=0, xend=pc_x, yend=pc_y), 
                     # arrow=arrow(length=unit(0.2,"cm")), alpha=1, size=1, colour="red") +
@@ -474,8 +428,10 @@ circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grou
                                 scale_x_continuous(limits=c(-1.3, 1.3), breaks=(c(-1,0,1))) +
                                 scale_y_continuous(limits=c(-1.3, 1.3), breaks=(c(-1,0,1))) +
                                 scale_color_manual(values = cb_palette_adapt) +
-                                geom_text (data=neg_positions_plot, aes (x=get(pc_x), y=get(pc_y), hjust=0, label=neg_labels), show.legend = FALSE, size=size_text_circle) +
-                                geom_text (data=pos_positions_plot, aes (x=get(pc_x), y=get(pc_y), hjust=0, label=pos_labels), show.legend = FALSE, size=size_text_circle) +
+                      
+        
+                                # geom_text (data=neg_positions_plot, aes (x=get(pc_x), y=get(pc_y), hjust=0, label=neg_labels), show.legend = FALSE, size=size_text_circle) +
+                                geom_text (data=data_annotation, aes_string (x=pc_x, y=pc_y, hjust=0, label="var"), show.legend = FALSE, size=size_text_circle) +
                                 geom_vline (xintercept = 0, linetype="dotted") +
                                 geom_hline (yintercept=0, linetype="dotted") +
                                 labs (title = title_var_loadings, x = paste("\n", label_axis_x, "(", var_x, "% of variance)", sep=""),
@@ -538,9 +494,9 @@ if (save_plot) {
   circle_plot_pc1_pc3
 }
 
-circle_plot_by_behavior_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Annotation")
-circle_plot_by_behavior_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Annotation")
-circle_plot_by_behavior_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Annotation")
+circle_plot_by_behavior_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Annotation", list_variance = list_var)
+circle_plot_by_behavior_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Annotation", list_variance = list_var)
+circle_plot_by_behavior_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Annotation", list_variance = list_var)
 
 if (save_plot) {
   ggsave (circle_plot_by_behavior_pc1_pc2, 
@@ -571,14 +527,13 @@ if (save_plot) {
 # circle_plot_by_behavior_pc1_pc3_labels <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Annotation", gr_plot_type="labels")
 # circle_plot_by_behavior_pc2_pc3_labels <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Annotation", gr_plot_type="labels")
 
-circle_plot_by_period_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Period")
-circle_plot_by_period_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Period")
-circle_plot_by_period_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Period")
+circle_plot_by_period_pc1_pc2 <- circle_plot_by_gr(circle_plot_annotation_merged, grouping_var="Period", list_variance = list_var)
+circle_plot_by_period_pc1_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.1", pc_y="Dim.3", grouping_var="Period", list_variance = list_var)
+circle_plot_by_period_pc2_pc3 <- circle_plot_by_gr(circle_plot_annotation_merged, pc_x="Dim.2", pc_y="Dim.3", grouping_var="Period", list_variance = list_var)
 
 # plot_name <- "PCA_factors_addiction"
 # plot_name <- "PCA_factors_addiction_1st_analysis_PCA_selection_variables"
 
-######## AQUI
 if (save_plot) {
   ggsave (circle_plot_by_period_pc1_pc2, 
           file=paste(out_folder, name_out, "_circle_period_PC1_vs_PC2", extension_img, sep=""), 
@@ -636,10 +591,6 @@ bars_plot_pc1 <- pca_barPlot(res$var$coord, sel_pc="Dim.1")
 bars_plot_pc2 <- pca_barPlot(res$var$coord, sel_pc="Dim.2")
 bars_plot_pc3 <- pca_barPlot(res$var$coord, sel_pc="Dim.3")
 
-# bars_plot_pc1 
-# bars_plot_pc2
-# bars_plot_pc3 
-
 if (save_plot) {
   ggsave (bars_plot_pc1,
           file=paste(out_folder, name_out, "_bars_PC1", extension_img, sep=""), 
@@ -663,39 +614,3 @@ if (save_plot) {
 } else {
   bars_plot_pc3
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-dailyInt_theme <- theme_update (axis.title.x = element_text (size=base_size * 2, face="bold"),
-                                axis.title.y = element_text (size=base_size * 2, angle = 90, face="bold"),
-                                plot.title = element_text (size=base_size * 2, face="bold"))
-
-
-
-
-
-###############
-### Circle Plot
-
-
-
-####################
-####################
-####################
-####################
-
-
-
-
