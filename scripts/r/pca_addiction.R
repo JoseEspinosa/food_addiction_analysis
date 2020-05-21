@@ -154,12 +154,11 @@ data_filtered <- subset (data, select=-c(Mice,
                                          Criteria_LP)) 
 
 ## Plots by phase
-# phase <- "LP"
-# phase <- "EP"
-# # phase <- "MP"
+# # phase <- "LP"
+# # phase <- "EP"
+# phase <- "MP"
 # data_filtered <- subset(data_filtered, select = grep(phase, names(data_filtered)))
-# names(data_filtered)
-# out_folder <- paste0(path_plots, "/var_behavioral_test_", phase, "/")
+# out_folder <- paste0(path_assets, "/figures/var_behavioral_test_", phase, "/")
 # name_out <- paste0 ("var_behavioral_test_", phase)
 
 # Remove categorical
