@@ -16,14 +16,18 @@
 
 **Persistence to response**: Non-reinforced active responses during the pellet-free period (10 min), when the box was 
 illuminated and signaling the unavailability of pellet delivery, were measured as a persistence of food-seeking 
-behavior. On the 3 consecutive days before the progressive ratio mice were scored.
+behavior. The corresponding behavioral test is named **self-administration session**. The test take place on the 3 
+consecutive days before the progressive ratio mice were scored. Self-administration session takes 1 hour distributed in 
+a 25' pellet period, 10' free pellet period and 25' pellet period. The persistence to the response is measured during 
+the 10 minutes (free-pellet period).
 
 **Motivation**: The progressive ratio schedule of reinforcement was used to evaluate the motivation for the 
 chocolate-flavored pellets. The response required to earn one single pellet escalated according to the following series: 
 1, 5, 12, 21, 33, 51, 75, 90, 120, 155, 180, 225, 260, 300, 350, 410, 465, 540, 630, 730, 850, 1000, 1200, 1500, 1800, 
 2100, 2400, 2700, 3000, 3400, 3800, 4200, 4600, 5000, and 5500. The maximal number of responses that the animal performs 
 to obtain one pellet was the last event completed, referred to as the breaking point. The maximum duration of the 
-progressive ratio session was 5 h or until mice did not respond on any lever within 1 h.
+progressive ratio session was 5 h or until mice did not respond on any lever within 1 h. The test name is the 
+**progressive ratio schedule**.
 
 **Compulsivity**: Total number of shocks in the session of shock test (50 min)
 performed after the PR test, when each pellet delivered was associated with a punishment, were used to evaluate 
