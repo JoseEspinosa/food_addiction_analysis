@@ -66,5 +66,6 @@ se hace durante early, medium y late, el FR5
 * solo coger lo que se utiliza para hacer la clasificacion ver que nos da entonces la PCA, esto validaria que la 
 la clasificacion es correcta, luego si se tienen que añadir otras variables mirarlo
 
-* plotar los criterios que se han cumplido en las pca
+* plotar los criterios que se han cumplido en las pca (1, 2 o 3)
+Hacer plots por diferentes grouping factors de la pca!!!
 
