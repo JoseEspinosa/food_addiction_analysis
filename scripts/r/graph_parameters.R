@@ -12,8 +12,6 @@
 base_size <- 12
 
 dailyInt_theme <- theme_update (
-  #axis.text.x = element_text (angle = 90, hjust = 1, size = base_size * 1.5),
-  #axis.text.x = element_text (hjust = 1, size = base_size * 1.5),
   axis.text.x = element_text (size = base_size * 1.5),
   axis.text.y = element_text (size = base_size * 1.5),
   axis.title.x = element_text (size=base_size * 1.5, face="bold"),
