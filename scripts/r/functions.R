@@ -218,3 +218,32 @@ circle_plot_by_gr <- function (data_annotation, pc_x="Dim.1", pc_y="Dim.2", grou
     }
   }
 }
+
+############
+## BARPLOT
+pca_barPlot <- function (pca_coord="", sel_pc="Dim.1") {
+  
+  df.bars <- cbind (as.numeric(sort(pca_coord[ ,sel_pc ]^2/sum(pca_coord[,sel_pc ]^2)*100,decreasing=TRUE)), 
+                    names(pca_coord[ ,sel_pc ])[order(pca_coord[ ,sel_pc ]^2,decreasing=TRUE)])
+  df.bars_to_plot <- as.data.frame (df.bars)
+  df.bars_to_plot$index <- as.factor (df.bars_to_plot$V2)
+  df.bars_to_plot$value <- as.numeric(sort(res$var$coord[ ,sel_pc ]^2/sum(res$var$coord[ ,sel_pc ]^2)*100,decreasing=TRUE))
+  df.bars_to_plot$index <- factor(df.bars_to_plot$index, levels = df.bars_to_plot$index[order(df.bars_to_plot$value, decreasing=TRUE)])
+  
+  # Filtering only the top contributors more than 2 %
+  threshold <- 2
+  df.bars_to_plot <- df.bars_to_plot [df.bars_to_plot$value > threshold, ]
+  
+  label_pc <- label_pc (sel_pc)
+  
+  title_bars <- paste ("Variable contribution to ", label_pc, "\n", sep="")
+  max_y <- ceiling(max(df.bars_to_plot$value) * 1.20)
+  # print (df.bars_to_plot)
+  bars_plot <- ggplot (data=df.bars_to_plot, aes(x=index, y=value)) + 
+    scale_y_continuous (breaks=seq(0, max_y, 5), limits=c(0, max_y)) +
+    geom_bar (stat="identity", fill="gray", width=0.8) + 
+    labs (title = title_bars, x = "", y="Contribution in %\n") +
+    theme(axis.text.x=element_text(angle=45, vjust=1, hjust=1))
+  
+  return (bars_plot)
+}
