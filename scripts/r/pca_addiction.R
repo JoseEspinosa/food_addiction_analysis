@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 #############################################################################
-### Jose A Espinosa. NPMMD/CB-CRG Group. Jan 2016                         ###
+### Jose A Espinosa. NPMMD/CB-CRG Group. May 2020                         ###
 #############################################################################
 ### PCA reinstatement experiment from Rafael's lab                        ###
 ### inactive presses during time out                                      ### 
@@ -98,8 +98,8 @@ home <- Sys.getenv("HOME")
 pwd <- getwd()
 
 # Loading functions:
-# source ("./scripts/r/graph_parameters.R")
-source (paste0 (pwd, "/graph_parameters.R"))
+source ("./scripts/r/graph_parameters.R")
+# source (paste0 (pwd, "/graph_parameters.R"))
 
 
 # Parameter to set plot qualities
@@ -258,15 +258,13 @@ pca_plot <- function (pca_r, pc_x="Dim.1", pc_y="Dim.2", id_v=NA, group_v=NA, ti
   
   if (!is.na(id_v[1])) {
     pca2plot$id <- id_v
-  }
-  else {
+  } else {
     pca2plot$id <- 1:n_samples
   }
   
   if (!is.na(group_v[1])) {
     pca2plot$Group <- group_v
-  }
-  else {
+  } else {
     pca2plot$Group <- "NA"
   }
   
