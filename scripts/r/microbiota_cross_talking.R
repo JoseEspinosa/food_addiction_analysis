@@ -6,6 +6,11 @@
 ### Cross-talking between behavior and microbiota                         ###
 #############################################################################
 
+
+library("ggplot2")
+library(tidyverse)
+library(dplyr)
+
 ## Functions
 transpose_df <- function(df) {
     # keep the first column 
@@ -20,8 +25,11 @@ transpose_df <- function(df) {
 }
 
 ### microbiota data
-rel_abundance_by_phylum <- "/Users/jaespinosa/git/food_addiction_analysis/data/microbiota/relative_abundances_by_phylum.csv"
-microbiota_by_phylum_ori <- read.csv(rel_abundance_by_phylum,
+taxon <- "phylum"
+home_dir <- Sys.getenv("HOME")
+rel_abundance_by_taxon <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, ".csv")
+# rel_abundance_by_phylum <- "/Users/jaespinosa/git/food_addiction_analysis/data/microbiota/relative_abundances_by_phylum.csv"
+microbiota_by_phylum_ori <- read.csv(rel_abundance_by_taxon,
                                      dec=",",
                                     # sep=";",
                                      sep="\t",
@@ -29,17 +37,17 @@ microbiota_by_phylum_ori <- read.csv(rel_abundance_by_phylum,
                                      stringsAsFactors = F)
 
 microbiota_by_phylum_tmp <- transpose_df(microbiota_by_phylum_ori)
-write.csv(microbiota_by_phylum_tmp, "/Users/jaespinosa/tmp.csv", row.names = F)
-microbiota_by_phylum <- read.csv("/Users/jaespinosa/tmp.csv",
+write.csv(microbiota_by_phylum_tmp, paste0(home_dir, "/tmp.csv", row.names = F)
+microbiota_by_phylum <- read.csv(paste0(home_dir, "/tmp.csv"),
          dec=",",
          check.names = F,
          stringsAsFactors = F)
-
 head(microbiota_by_phylum)
 
 ## Behavioral data
 
-behavioral_data_path <- "/Users/jaespinosa/git/food_addiction_analysis/data/microbiota/behavioral_data_from_results_microbiota_16_04_20_withoutCategorical.csv"
+behavioral_data_path <- paste0(home_dir,
+                               "/git/food_addiction_analysis/data/microbiota/behavioral_data_from_results_microbiota_16_04_20_withoutCategorical.csv")
 
 behavioral_data <- read.csv(behavioral_data_path,
                             dec=",",
@@ -50,8 +58,8 @@ head(behavioral_data)
 
 
 ## merge behavior with microbiota
-microbio_behavioral_merged <- merge (microbiota_by_phylum, behavioral_data, by.x= "mouse_id", by.y = "Mice")
-head(microbio_behavioral_merged)
+# microbio_behavioral_merged <- merge (microbiota_by_phylum, behavioral_data, by.x= "mouse_id", by.y = "Mice")
+# head(microbio_behavioral_merged)
 
 cor(microbio_behavioral_merged[,4], microbio_behavioral_merged[,14])
 
@@ -62,8 +70,8 @@ library("tidyr")
 library("tibble")
 library("purrr")
 
-head(microbio_behavioral_merged)
-colnames(microbio_behavioral_merged)
+# head(microbio_behavioral_merged)
+# colnames(microbio_behavioral_merged)
 
 d <- subset (microbio_behavioral_merged, 
         select=-c(mouse_id,
@@ -84,7 +92,7 @@ d2 <- d %>%
 
 head (d2)
 filter(d2, value > .5)
-library(dplyr)
+
 
 d2_df <- d2 %>%
   mutate(var_order = paste(var1, var2) %>%
@@ -102,7 +110,6 @@ d2_df <- d2 %>%
 head(d2_df)
 tail (d2_df, 30)
 
-library("ggplot2")
 
 p <- ggplot(d2_df, aes(x=var1,y=var2,fill=value))+
       geom_tile()
@@ -148,13 +155,12 @@ head(data)
 data_nest <- group_by(data, taxon, behavior_idx) %>% nest()
 data_nest
 
-data_nest <- group_by(data, city, telecon) %>% nest()
+# data_nest <- group_by(data, city, telecon) %>% nest()
 cor_fun <- function(df) cor.test(df$microbio_rel_ab, df$index, method = "spearman") %>% tidy()
-if(!require("tidyverse")) install.packages("tidyverse")
-library(tidyverse)
+
 library(broom)
-library(fs)
-library(lubridate)
+# library(fs)
+# library(lubridate)
 
 data_nest <- mutate(data_nest, model = map(data, cor_fun))
 data_nest
