@@ -1,21 +1,12 @@
-# file_microbio <- "/Users/jaespinosa/Google Drive/microbiota_elena/FA microbiota/Results microbiota_16.04.20.csv"
+#!/usr/bin/env Rscript
 
-# microbio_tbl <- read.csv(file_microbio,
-#                          dec=",",
-#                          sep=";",
-#                          stringsAsFactors = F)
-# head (microbio_tbl)
+#############################################################################
+### Jose Espinosa-Carrasco CB-CRG Group. Sep 2020                         ###
+#############################################################################
+### Cross-talking between behavior and microbiota                         ###
+#############################################################################
 
-### microbiota data
-rel_abundance_by_phylum <- "/Users/jaespinosa/git/food_addiction_analysis/data/microbiota/relative_abundances_by_phylum.csv"
-microbiota_by_phylum_ori <- read.csv(rel_abundance_by_phylum,
-                         dec=",",
-                         # sep=";",
-                         sep="\t",
-                         check.names = F,
-                         stringsAsFactors = F)
-head (microbiota_by_phylum_ori)
-
+## Functions
 transpose_df <- function(df) {
     # keep the first column 
     names <-  df[,1]
@@ -28,6 +19,15 @@ transpose_df <- function(df) {
     return(df.T)
 }
 
+### microbiota data
+rel_abundance_by_phylum <- "/Users/jaespinosa/git/food_addiction_analysis/data/microbiota/relative_abundances_by_phylum.csv"
+microbiota_by_phylum_ori <- read.csv(rel_abundance_by_phylum,
+                                     dec=",",
+                                    # sep=";",
+                                     sep="\t",
+                                     check.names = F,
+                                     stringsAsFactors = F)
+
 microbiota_by_phylum_tmp <- transpose_df(microbiota_by_phylum_ori)
 write.csv(microbiota_by_phylum_tmp, "/Users/jaespinosa/tmp.csv", row.names = F)
 microbiota_by_phylum <- read.csv("/Users/jaespinosa/tmp.csv",
@@ -36,9 +36,6 @@ microbiota_by_phylum <- read.csv("/Users/jaespinosa/tmp.csv",
          stringsAsFactors = F)
 
 head(microbiota_by_phylum)
-
-
-# microbiota_by_phylum$mouse_id <- row.names(microbiota_by_phylum)
 
 ## Behavioral data
 
@@ -158,7 +155,6 @@ library(tidyverse)
 library(broom)
 library(fs)
 library(lubridate)
-rm(tidy)
 
 data_nest <- mutate(data_nest, model = map(data, cor_fun))
 data_nest
