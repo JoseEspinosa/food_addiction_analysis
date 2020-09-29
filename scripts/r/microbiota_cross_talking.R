@@ -6,8 +6,7 @@
 ### Cross-talking between behavior and microbiota                         ###
 #############################################################################
 
-
-library("ggplot2")
+library(ggplot2)
 library(tidyverse)
 library(dplyr)
 
@@ -37,15 +36,14 @@ microbiota_by_phylum_ori <- read.csv(rel_abundance_by_taxon,
                                      stringsAsFactors = F)
 
 microbiota_by_phylum_tmp <- transpose_df(microbiota_by_phylum_ori)
-write.csv(microbiota_by_phylum_tmp, paste0(home_dir, "/tmp.csv", row.names = F)
+write.csv(microbiota_by_phylum_tmp, paste0(home_dir, "/tmp.csv", row.names = F))
 microbiota_by_phylum <- read.csv(paste0(home_dir, "/tmp.csv"),
-         dec=",",
-         check.names = F,
-         stringsAsFactors = F)
+                                 dec=",",
+                                 check.names = F,
+                                 stringsAsFactors = F)
 head(microbiota_by_phylum)
 
 ## Behavioral data
-
 behavioral_data_path <- paste0(home_dir,
                                "/git/food_addiction_analysis/data/microbiota/behavioral_data_from_results_microbiota_16_04_20_withoutCategorical.csv")
 
@@ -54,13 +52,75 @@ behavioral_data <- read.csv(behavioral_data_path,
                             sep=";",
                             check.names = F,
                             stringsAsFactors = F)
-head(behavioral_data)
+# head(behavioral_data)
 
+####################################
+## Only dataframe selected columns
+# head(microbiota_by_phylum)
+# head(behavioral_data)
+microbiota_relAbund <- subset(microbiota_by_phylum, select=-c(Grouping))
+behavioral_data$mouse_id <- behavioral_data$Mice
+behavioral_cont_data <- subset (behavioral_data, 
+                                select=-c(Mice, diet_group_ireland, Addiction_categorization_LP))
 
+microbio_behavioral_merged <- merge (microbiota_relAbund, behavioral_cont_data, by= "mouse_id")
+# head(microbio_behavioral_merged)                  
+data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Verrucomicrobia:Actinobacteria)%>%
+                     gather(behavior_idx, index, Persistence_EP:Acquisition_stability)
+# head(data)
+data_nest <- group_by(data, taxon, behavior_idx) %>% nest()
+# head(data_nest)
+
+# data_nest <- group_by(data, city, telecon) %>% nest()
+cor_fun <- function(df) cor.test(df$microbio_rel_ab, df$index, method = "spearman") %>% tidy()
+
+# library(broom)
+
+# library(fs)
+# library(lubridate)
+
+data_nest <- mutate(data_nest, model = map(data, cor_fun))
+data_nest
+
+# str(slice(data_nest, 1))
+
+corr_pr <- select(data_nest, -data) %>% unnest()
+corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
+
+hm <- ggplot() + geom_tile(data = corr_pr,
+                          # aes(taxon, behavior_idx, fill = estimate),
+                          aes( behavior_idx, taxon, fill = estimate),
+                          size = 1,
+                          colour = "white")+
+                geom_tile(data = filter(corr_pr, sig == "Sig."),
+                          # aes(taxon, behavior_idx),
+                          aes(behavior_idx, taxon),
+                          size = 1,
+                          colour = "black",
+                          fill = "transparent") +
+                geom_text(data = corr_pr, angle = 270,
+                          # aes(taxon, behavior_idx, #label = round(estimate, 2),
+                          aes(behavior_idx, taxon,    
+                              label = ifelse(sig == "Sig.", round(estimate, 2),""),
+                              fontface = ifelse(sig == "Sig.", "bold", "plain")))+
+                # scale_fill_gradient2(breaks = seq(-1, 1, 0.2))+
+                scale_fill_gradient2(breaks = seq(-1, 1, 0.2), #midpoint = mid, 
+                                      low = "#d53e4f", mid = "white",
+                                      high = "#abdda4" ) + 
+                labs(y = taxon, x = "", fill = "", p.value = "") +
+                theme_minimal()+
+                theme(panel.grid.major = element_blank(),
+                      panel.border = element_blank(),
+                      panel.background = element_blank(),
+                      axis.ticks = element_blank(),
+                      axis.text.x = element_text(angle = 90))
+
+##########################
+################
+## Old code
 ## merge behavior with microbiota
-# microbio_behavioral_merged <- merge (microbiota_by_phylum, behavioral_data, by.x= "mouse_id", by.y = "Mice")
-# head(microbio_behavioral_merged)
-
+microbio_behavioral_merged <- merge (microbiota_by_phylum, behavioral_data, by.x= "mouse_id", by.y = "Mice")
+head(microbio_behavioral_merged)
 cor(microbio_behavioral_merged[,4], microbio_behavioral_merged[,14])
 
 ## Hacer todas las correlaciones incluso entre microbiota y behavioral itself
@@ -74,11 +134,11 @@ library("purrr")
 # colnames(microbio_behavioral_merged)
 
 d <- subset (microbio_behavioral_merged, 
-        select=-c(mouse_id,
-                  Var.2,
-                  Grouping,
-                  Addiction_categorization_LP,
-                  diet_group_ireland))
+             select=-c(mouse_id,
+                       Var.2,
+                       Grouping,
+                       Addiction_categorization_LP,
+                       diet_group_ireland))
 
 head(d$Addiction_categorization_LP)
 sapply(d, class)
@@ -112,17 +172,17 @@ tail (d2_df, 30)
 
 
 p <- ggplot(d2_df, aes(x=var1,y=var2,fill=value))+
-      geom_tile()
+  geom_tile()
 p
 
 m4 <- d2_df %>%
-      # convert state to factor and reverse order of levels
-      mutate(state=factor(state,levels=rev(sort(unique(state))))) %>%
-      # create a new variable from count
-      mutate(countfactor=cut(count,breaks=c(-1,0,1,10,100,500,1000,max(count,na.rm=T)),
-                             labels=c("0","0-1","1-10","10-100","100-500","500-1000",">1000"))) %>%
-      # change level order
-      mutate(countfactor=factor(as.character(countfactor),levels=rev(levels(countfactor))))
+  # convert state to factor and reverse order of levels
+  mutate(state=factor(state,levels=rev(sort(unique(state))))) %>%
+  # create a new variable from count
+  mutate(countfactor=cut(count,breaks=c(-1,0,1,10,100,500,1000,max(count,na.rm=T)),
+                         labels=c("0","0-1","1-10","10-100","100-500","500-1000",">1000"))) %>%
+  # change level order
+  mutate(countfactor=factor(as.character(countfactor),levels=rev(levels(countfactor))))
 
 
 m2 <- m %>%
@@ -137,56 +197,3 @@ m2 <- m %>%
   # convert value to numeric (also converts '-' to NA, gives a warning)
   mutate(value=as.numeric(value))
 
-
-####################################
-## Only dataframe selected columns
-head(microbiota_by_phylum)
-head(behavioral_data)
-microbiota_relAbund <- subset(microbiota_by_phylum, select=-c(Grouping))
-behavioral_data$mouse_id <- behavioral_data$Mice
-behavioral_cont_data <- subset (behavioral_data, 
-                                select=-c(Mice, diet_group_ireland, Addiction_categorization_LP))
-
-microbio_behavioral_merged <- merge (microbiota_relAbund, behavioral_cont_data, by= "mouse_id")
-head(microbio_behavioral_merged)                  
-data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Verrucomicrobia:Actinobacteria)%>%
-                     gather(behavior_idx, index, Persistence_EP:Acquisition_stability)
-head(data)
-data_nest <- group_by(data, taxon, behavior_idx) %>% nest()
-data_nest
-
-# data_nest <- group_by(data, city, telecon) %>% nest()
-cor_fun <- function(df) cor.test(df$microbio_rel_ab, df$index, method = "spearman") %>% tidy()
-
-library(broom)
-# library(fs)
-# library(lubridate)
-
-data_nest <- mutate(data_nest, model = map(data, cor_fun))
-data_nest
-
-str(slice(data_nest, 1))
-
-corr_pr <- select(data_nest, -data) %>% unnest()
-corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
-
-ggplot()+
-  geom_tile(data = corr_pr,
-            aes(taxon, behavior_idx, fill = estimate),
-            size = 1,
-            colour = "white")+
-  geom_tile(data = filter(corr_pr, sig == "Sig."),
-            aes(taxon, behavior_idx),
-            size = 1,
-            colour = "black",
-            fill = "transparent")+
-  geom_text(data = corr_pr,
-            aes(taxon, behavior_idx, label = round(estimate, 2),
-                fontface = ifelse(sig == "Sig.", "bold", "plain")))+
-  scale_fill_gradient2(breaks = seq(-1, 1, 0.2))+
-  labs(x = "", y = "", fill = "", p.value = "")+
-  theme_minimal()+
-  theme(panel.grid.major = element_blank(),
-        panel.border = element_blank(),
-        panel.background = element_blank(),
-        axis.ticks = element_blank())
