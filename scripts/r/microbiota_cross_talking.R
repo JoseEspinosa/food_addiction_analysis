@@ -25,18 +25,21 @@ transpose_df <- function(df) {
 
 ### microbiota data
 taxon <- "phylum"
+taxon <- "family"
+taxon <- "genus"
+
 home_dir <- Sys.getenv("HOME")
 rel_abundance_by_taxon <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, ".csv")
 # rel_abundance_by_phylum <- "/Users/jaespinosa/git/food_addiction_analysis/data/microbiota/relative_abundances_by_phylum.csv"
 microbiota_by_phylum_ori <- read.csv(rel_abundance_by_taxon,
                                      dec=",",
-                                    # sep=";",
-                                     sep="\t",
+                                     sep=";",
+                                     # sep="\t",
                                      check.names = F,
                                      stringsAsFactors = F)
 
 microbiota_by_phylum_tmp <- transpose_df(microbiota_by_phylum_ori)
-write.csv(microbiota_by_phylum_tmp, paste0(home_dir, "/tmp.csv", row.names = F))
+write.csv(microbiota_by_phylum_tmp, paste0(home_dir, "/tmp.csv"))
 microbiota_by_phylum <- read.csv(paste0(home_dir, "/tmp.csv"),
                                  dec=",",
                                  check.names = F,
@@ -58,15 +61,27 @@ behavioral_data <- read.csv(behavioral_data_path,
 ## Only dataframe selected columns
 # head(microbiota_by_phylum)
 # head(behavioral_data)
-microbiota_relAbund <- subset(microbiota_by_phylum, select=-c(Grouping))
+# microbiota_relAbund <- subset(microbiota_by_phylum, select=-c(Grouping))
+microbiota_relAbund <- subset(microbiota_by_phylum)
 behavioral_data$mouse_id <- behavioral_data$Mice
 behavioral_cont_data <- subset (behavioral_data, 
                                 select=-c(Mice, diet_group_ireland, Addiction_categorization_LP))
 
 microbio_behavioral_merged <- merge (microbiota_relAbund, behavioral_cont_data, by= "mouse_id")
 # head(microbio_behavioral_merged)                  
+
+## phylum
 data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Verrucomicrobia:Actinobacteria)%>%
-                     gather(behavior_idx, index, Persistence_EP:Acquisition_stability)
+               gather(behavior_idx, index, Persistence_EP:Acquisition_stability)
+## family
+data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Alcaligenaceae:Others)%>%
+               gather(behavior_idx, index, Persistence_EP:Acquisition_stability)
+
+## genus
+data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Acetatifactor:Tyzzerella)%>%
+               gather(behavior_idx, index, Persistence_EP:Acquisition_stability)
+
+
 # head(data)
 data_nest <- group_by(data, taxon, behavior_idx) %>% nest()
 # head(data_nest)
@@ -114,6 +129,12 @@ hm <- ggplot() + geom_tile(data = corr_pr,
                       panel.background = element_blank(),
                       axis.ticks = element_blank(),
                       axis.text.x = element_text(angle = 90))
+
+out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_microbio/")
+dpi_q <- 200
+extension_img <- ".png"
+ggsave (hm, file=paste0(out_dir, "heatmap_", taxon, extension_img), 
+        width = 20, height = 12, dpi=dpi_q)
 
 ##########################
 ################
