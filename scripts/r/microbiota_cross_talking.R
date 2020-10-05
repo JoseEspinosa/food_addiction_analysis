@@ -51,26 +51,28 @@ head(microbiota_by_phylum)
 
 # Only behavioral variables used in PCA
 behavioral_data_path <- paste0(home_dir,
-                               "/git/food_addiction_analysis/data/microbiota//behavioral_data_from_results_microbiota_16_04_20_PCA_variables.csv")
+                               "/git/food_addiction_analysis/data/microbiota/behavioral_data_from_results_microbiota_16_04_20_withoutCategorical.csv")
 behavioral_data <- read.csv(behavioral_data_path,
                             dec=",",
                             sep=";",
                             check.names = F,
                             stringsAsFactors = F)
-# head(behavioral_data)
+head(behavioral_data)
 
 ####################################
 ## Only dataframe selected columns
 # head(microbiota_by_phylum)
 # head(behavioral_data)
 # microbiota_relAbund <- subset(microbiota_by_phylum, select=-c(Grouping))
-microbiota_relAbund <- subset(microbiota_by_phylum)
-behavioral_data$mouse_id <- behavioral_data$Mice
-behavioral_cont_data <- subset (behavioral_data, 
-                                select=-c(Mice, diet_group_ireland, Addiction_categorization_LP))
-
+# microbiota_relAbund <- subset(microbiota_by_phylum)
+# behavioral_cont_data <- behavioral_data
+behavioral_cont_data <- subset (behavioral_data,
+                                select=-c(diet_group_ireland, Addiction_categorization_LP))
+head(microbiota_relAbund)
+head(behavioral_cont_data)
 microbio_behavioral_merged <- merge (microbiota_relAbund, behavioral_cont_data, by= "mouse_id")
-# head(microbio_behavioral_merged)                  
+head(microbio_behavioral_merged)
+microbio_behavioral_merged <- subset (microbio_behavioral_merged,select=-c(Var.2, Grouping))
 
 ## phylum
 data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Verrucomicrobia:Actinobacteria)%>%

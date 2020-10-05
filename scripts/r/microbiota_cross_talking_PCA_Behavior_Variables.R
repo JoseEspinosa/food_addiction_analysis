@@ -24,9 +24,9 @@ transpose_df <- function(df) {
 }
 
 ### microbiota data
-# taxon <- "phylum"; sep_f="\t"
+taxon <- "phylum"; sep_f="\t"
 # taxon <- "family"; sep_f=";"
-taxon <- "genus"; sep_f=";"
+# taxon <- "genus"; sep_f=";"
 
 home_dir <- Sys.getenv("HOME")
 rel_abundance_by_taxon <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, ".csv")
@@ -65,19 +65,20 @@ microbiota_relAbund <- subset(microbiota_by_taxon, select=-c(Grouping))
 behavioral_cont_data <- behavioral_data
 microbio_behavioral_merged <- merge (microbiota_relAbund, behavioral_cont_data, by= "mouse_id")
 head(microbio_behavioral_merged)
+head(behavioral_cont_data)
 
 ## phylum
 data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Verrucomicrobia:Actinobacteria)%>%
-  gather(behavior_idx, index, Persistence_LP:Aversive_LP)
+        gather(behavior_idx, index, Persistence_LP:Aversive_LP)
 
 ## family
-data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Alcaligenaceae:Others)%>%
-               gather(behavior_idx, index, Persistence_LP:Aversive_LP)
-
-# ## genus
-data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Acetatifactor:Tyzzerella)%>%
-               gather(behavior_idx, index, Persistence_LP:Aversive_LP)
- 
+# data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Alcaligenaceae:Others)%>%
+#                gather(behavior_idx, index, Persistence_LP:Aversive_LP)
+# 
+# # ## genus
+# data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Acetatifactor:Tyzzerella)%>%
+#                gather(behavior_idx, index, Persistence_LP:Aversive_LP)
+#  
 
 # head(data)
 data_nest <- group_by(data, taxon, behavior_idx) %>% nest()

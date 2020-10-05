@@ -23,9 +23,10 @@ transpose_df <- function(df) {
   return(df.T)
 }
 
+home_dir <- Sys.getenv("HOME")
 # Only behavioral variables used in PCA
 behavioral_data_path <- paste0(home_dir,
-                               "/git/food_addiction_analysis/data/microbiota//behavioral_data_from_results_microbiota_16_04_20_PCA_variables.csv")
+                               "/git/food_addiction_analysis/data/microbiota/behavioral_data_from_results_microbiota_16_04_20_PCA_variables.csv")
 behavioral_data <- read.csv(behavioral_data_path,
                             dec=",",
                             sep=";",
@@ -71,19 +72,24 @@ miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
                                                      'mmu-miR-137-3p',
                                                      'mmu-miR-100-5p',
                                                      'mmu-miR-192-5p'))
-
+miRNAs_data_selected <-miRNAs_data
 miRNAs_behavioral_merged <- merge (miRNAs_data_selected, behavioral_data, by= "mouse_id")
 head(miRNAs_behavioral_merged)
 
 ## All miRNAs
+first_miRNA <- 'mmu-miR-34c-3p'; last_miRNA <- 'mmu-miR-7666-3p';
+axis_text_size<-24; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
+width_p <- 45; height_p <- 14
 
-## selected miRNAs
-data <- gather(miRNAs_behavioral_merged, miRNA, value, 'mmu-miR-876-5p':'mmu-miR-192-5p')%>%
-  gather(behavior_idx, index, Persistence_LP:Aversive_LP)
+## Selected miRNAs
+# first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p'
+# axis_text_size<-16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
+# width_p <- 20; height_p <- 12
 
+data <- gather(miRNAs_behavioral_merged, miRNA, value, first_miRNA:last_miRNA)%>%
+        gather(behavior_idx, index, Persistence_LP:Aversive_LP)
 
 data_nest <- group_by(data, miRNA, behavior_idx) %>% nest()
-
 
 # data_nest <- group_by(data, city, telecon) %>% nest()
 # cor_method <- "pearson"
@@ -109,20 +115,20 @@ hm <- ggplot() + geom_tile(data = corr_pr,
                                size = 1,
                                colour = "white") +
       ## black lines around tiles
-      # geom_tile(data = filter(corr_pr, sig == "Sig."),
-      #           # aes(behavior_idx, miRNA),
-      #           aes(miRNA, behavior_idx),
-      #           size = 1,
-      #           colour = "black",
-      #           fill = "transparent") +
-      geom_text(data = corr_pr, 
-                # angle = 270, 
-                size=5,
-                # aes(behavior_idx, miRNA, #label = round(estimate, 2),
-                aes(miRNA, behavior_idx,    
-                    label = ifelse(sig == "Sig.", round(estimate, 2), ""))) +
-                    # fontface = ifelse(sig == "Sig.", "bold", "plain"))) +
-          # scale_fill_gradient2(breaks = seq(-1, 1, 0.2)) +
+      geom_tile(data = filter(corr_pr, sig == "Sig."),
+                # aes(behavior_idx, miRNA),
+                aes(miRNA, behavior_idx),
+                size = 1,
+                colour = "black",
+                fill = "transparent") +
+      # geom_text(data = corr_pr, 
+      #           angle = angle_reg,
+      #           size=5,
+      #           # aes(behavior_idx, miRNA, #label = round(estimate, 2),
+      #           aes(miRNA, behavior_idx,    
+      #               label = ifelse(sig == "Sig.", round(estimate, 2), ""))) +
+      #               # fontface = ifelse(sig == "Sig.", "bold", "plain"))) +
+      #     # scale_fill_gradient2(breaks = seq(-1, 1, 0.2)) +
       scale_fill_gradient2(breaks = seq(-1, 1, 0.2), #midpoint = mid, 
                            low = "#d53e4f", mid = "white",
                            high = "#abdda4") + 
@@ -132,24 +138,14 @@ hm <- ggplot() + geom_tile(data = corr_pr,
             panel.border = element_blank(),
             panel.background = element_blank(),
             axis.ticks = element_blank(),
-            axis.text = element_text(size=16),
-            axis.text.x = element_text(angle = 90),
+            axis.text = element_text(size=axis_text_size),
+            axis.text.x = element_text(angle=90),
             legend.text = element_text( size=14))
 
 out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_behavior_miRNAs/")
 dpi_q <- 200
 extension_img <- ".png"
-ggsave (hm, file=paste0(out_dir, "heatmap_fewVar_", "miRNAs", extension_img), 
-        width = 20, height = 12, dpi=dpi_q)
+ggsave (hm, file=paste0(out_dir, "heatmap_fewVar_", microbio_set ,"_microbio_",
+                        "miRNAs", extension_img), 
+        width=width_p, height = height_p, dpi=dpi_q)
 
-
-cor.test(microbio_behavioral_merged$Aversive_MP, microbio_behavioral_merged$Deferribacteres,
-         method = "spearman")
-
-ggplot (microbio_behavioral_merged, aes(x=Aversive_MP, y=Deferribacteres)) + 
-  geom_point() +
-  theme_minimal()+
-  theme(panel.grid.major = element_blank(),
-        panel.border = element_blank(),
-        panel.background = element_blank(),
-        axis.ticks = element_blank())
