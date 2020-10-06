@@ -63,7 +63,7 @@ head(behavioral_data)
 ## Only dataframe selected columns
 # head(microbiota_by_phylum)
 # head(behavioral_data)
-# microbiota_relAbund <- subset(microbiota_by_phylum, select=-c(Grouping))
+microbiota_relAbund <- subset(microbiota_by_phylum, select=-c(Grouping))
 # microbiota_relAbund <- subset(microbiota_by_phylum)
 # behavioral_cont_data <- behavioral_data
 behavioral_cont_data <- subset (behavioral_data,
@@ -135,7 +135,7 @@ hm <- ggplot() + geom_tile(data = corr_pr,
                       panel.background = element_blank(),
                       axis.ticks = element_blank(),
                       axis.text.x = element_text(angle = 90))
-
+hm
 out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_microbio/")
 dpi_q <- 200
 extension_img <- ".png"

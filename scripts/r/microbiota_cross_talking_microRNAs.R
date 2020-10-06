@@ -30,8 +30,8 @@ first_up <- function(x) {
 
 ### microbiota data
 # taxon <- "phylum"; sep_f="\t"; first_taxon <- 'Verrucomicrobia'; last_taxon <- 'Actinobacteria'
-taxon <- "family"; sep_f=";"; first_taxon <- 'Alcaligenaceae';last_taxon <- 'Others'
-# taxon <- "genus"; sep_f=";"; first_taxon<-'Acetatifactor'; last_taxon<-'Tyzzerella';
+# taxon <- "family"; sep_f=";"; first_taxon <- 'Alcaligenaceae';last_taxon <- 'Others'
+taxon <- "genus"; sep_f=";"; first_taxon<-'Acetatifactor'; last_taxon<-'Tyzzerella';
 
 home_dir <- Sys.getenv("HOME")
 rel_abundance_by_taxon <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, ".csv")
@@ -171,7 +171,7 @@ hm <- ggplot() + geom_tile(data = corr_pr,
 out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_microbio_miRNAs/")
 dpi_q <- 200
 extension_img <- ".png"
-
+hm
 ggsave (hm, file=paste0(out_dir, "heatmap_", microbio_set ,"_microbio_", taxon, extension_img), 
         width = width_p, height = height_p, dpi=dpi_q)
 
