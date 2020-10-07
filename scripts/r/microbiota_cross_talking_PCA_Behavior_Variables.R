@@ -23,10 +23,23 @@ transpose_df <- function(df) {
   return(df.T)
 }
 
+first_up <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
+
 ### microbiota data
-taxon <- "phylum"; sep_f="\t"
+# axis_text_size<-24;
+# taxon <- "phylum"; sep_f="\t";
+# first_taxon <- 'Verrucomicrobia';last_taxon <- 'Actinobacteria';
+
+# axis_text_size<-24;
 # taxon <- "family"; sep_f=";"
-# taxon <- "genus"; sep_f=";"
+# first_taxon <- 'Alcaligenaceae';last_taxon <- 'Others';
+
+axis_text_size<-14;
+taxon <- "genus"; sep_f=";"
+first_taxon <- 'Acetatifactor';last_taxon <- 'Tyzzerella';
 
 home_dir <- Sys.getenv("HOME")
 rel_abundance_by_taxon <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, ".csv")
@@ -48,7 +61,7 @@ head(microbiota_by_taxon)
 
 # Only behavioral variables used in PCA
 behavioral_data_path <- paste0(home_dir,
-                               "/git/food_addiction_analysis/data/microbiota//behavioral_data_from_results_microbiota_16_04_20_PCA_variables.csv")
+                               "/git/food_addiction_analysis/data/microbiota/behavioral_data_from_results_microbiota_16_04_20_PCA_variables.csv")
 behavioral_data <- read.csv(behavioral_data_path,
                             dec=",",
                             sep=";",
@@ -68,17 +81,8 @@ head(microbio_behavioral_merged)
 head(behavioral_cont_data)
 
 ## phylum
-data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Verrucomicrobia:Actinobacteria)%>%
+data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, first_taxon:last_taxon)%>%
         gather(behavior_idx, index, Persistence_LP:Aversive_LP)
-
-## family
-# data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Alcaligenaceae:Others)%>%
-#                gather(behavior_idx, index, Persistence_LP:Aversive_LP)
-# 
-# # ## genus
-# data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Acetatifactor:Tyzzerella)%>%
-#                gather(behavior_idx, index, Persistence_LP:Aversive_LP)
-#  
 
 # head(data)
 data_nest <- group_by(data, taxon, behavior_idx) %>% nest()
@@ -102,6 +106,17 @@ data_nest
 corr_pr <- select(data_nest, -data) %>% unnest()
 corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
 
+######
+# FDR
+# test_p <- corr_pr$p.value
+# class (corr_pr$p.value)
+# 
+# test_p<-c(test_p,0.001459265)
+# p.adjust(test_p, method = 'BH', n = length(test_p))
+# # corr_pr$fdr <- p.adjust(corr_pr$p.value, method = 'BH', n = length(corr_pr$p.value))
+# # corr_pr <- mutate(corr_pr, sig = ifelse(fdr <0.05, "Sig.", "Non Sig."))
+# subset (corr_pr,  p.value > 0.9)
+
 hm <- ggplot() + geom_tile(data = corr_pr,
                            # aes(taxon, behavior_idx, fill = estimate),
                            aes( behavior_idx, taxon, fill = estimate),
@@ -113,28 +128,41 @@ hm <- ggplot() + geom_tile(data = corr_pr,
             size = 1,
             colour = "black",
             fill = "transparent") +
-  geom_text(data = corr_pr, angle = 270,
+  geom_text(data = corr_pr, 
+            # angle = 270,
             # aes(taxon, behavior_idx, #label = round(estimate, 2),
             aes(behavior_idx, taxon,    
+                ## print cor estimate
                 label = ifelse(sig == "Sig.", round(estimate, 2),""),
+                ## print p-value
+                # label = ifelse(sig == "Sig.", round(p.value, 4),""),
                 fontface = ifelse(sig == "Sig.", "bold", "plain")))+
   # scale_fill_gradient2(breaks = seq(-1, 1, 0.2))+
   scale_fill_gradient2(breaks = seq(-1, 1, 0.2), #midpoint = mid, 
                        low = "#d53e4f", mid = "white",
                        high = "#abdda4" ) + 
-  labs(y = taxon, x = "", fill = "", p.value = "") +
+  labs(y = first_up(taxon), x = "", fill = "", p.value = "") +
   theme_minimal()+
   theme(panel.grid.major = element_blank(),
         panel.border = element_blank(),
         panel.background = element_blank(),
         axis.ticks = element_blank(),
+        axis.text = element_text(size=axis_text_size),
+        axis.title= element_text(size=axis_text_size),
         axis.text.x = element_text(angle = 90))
+
+hm
 
 out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_microbio/")
 dpi_q <- 200
 extension_img <- ".png"
 ggsave (hm, file=paste0(out_dir, "heatmap_fewVar_", taxon, extension_img), 
         width = 20, height = 12, dpi=dpi_q)
+
+
+
+
+
 
 
 cor.test(microbio_behavioral_merged$Aversive_MP, microbio_behavioral_merged$Deferribacteres,
