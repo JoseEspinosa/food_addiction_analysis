@@ -68,6 +68,7 @@ heatmaply_cor(
 
 addicts <- subset(microbiota_by_taxon, Grouping=="Addict")[,4:length(microbiota_by_taxon[1,])]
 no_addicts <- subset(microbiota_by_taxon, Grouping=="Non-Addict")[,4:length(microbiota_by_taxon[1,])]
+all <- microbiota_by_taxon[,4:length(microbiota_by_taxon[1,])]
 
 heatmaply_cor(
   cor(addicts),
@@ -79,6 +80,14 @@ heatmaply_cor(
 
 heatmaply_cor(
   cor(no_addicts),
+  xlab = "Features", 
+  ylab = "Features",
+  k_col = 2, 
+  k_row = 2
+)
+
+heatmaply_cor(
+  cor(all),
   xlab = "Features", 
   ylab = "Features",
   k_col = 2, 
