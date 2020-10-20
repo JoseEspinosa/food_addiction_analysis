@@ -24,13 +24,13 @@ transpose_df <- function(df) {
 }
 
 ### microbiota data
-taxon <- "phylum"; sep_f="\t"
-# taxon <- "family"; sep_f=";"
-# taxon <- "genus"; sep_f=";"
+taxon <- "phylum"; sep_f=";"; first_taxon <- 'Verrucomicrobia'; last_taxon <- 'Actinobacteria'
+# taxon <- "family"; sep_f=";"; first_taxon <- 'Alcaligenaceae';last_taxon <- 'Others'
+# taxon <- "genus"; sep_f=";"; first_taxon<-'Acetatifactor'; last_taxon<-'Tyzzerella';
+
 
 home_dir <- Sys.getenv("HOME")
 rel_abundance_by_taxon <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, ".csv")
-# rel_abundance_by_phylum <- "/Users/jaespinosa/git/food_addiction_analysis/data/microbiota/relative_abundances_by_phylum.csv"
 microbiota_by_phylum_ori <- read.csv(rel_abundance_by_taxon,
                                      dec=",",
                                      sep=sep_f,
@@ -38,12 +38,12 @@ microbiota_by_phylum_ori <- read.csv(rel_abundance_by_taxon,
                                      stringsAsFactors = F)
 
 microbiota_by_phylum_tmp <- transpose_df(microbiota_by_phylum_ori)
+
 write.csv(microbiota_by_phylum_tmp, paste0(home_dir, "/tmp.csv"))
 microbiota_by_phylum <- read.csv(paste0(home_dir, "/tmp.csv"),
                                  dec=",",
                                  check.names = F,
                                  stringsAsFactors = F)
-head(microbiota_by_phylum)
 
 ## Behavioral data all variables
 # behavioral_data_path <- paste0(home_dir,
@@ -57,25 +57,22 @@ behavioral_data <- read.csv(behavioral_data_path,
                             sep=";",
                             check.names = F,
                             stringsAsFactors = F)
-head(behavioral_data)
 
 ####################################
 ## Only dataframe selected columns
 # head(microbiota_by_phylum)
 # head(behavioral_data)
-microbiota_relAbund <- subset(microbiota_by_phylum, select=-c(Grouping))
-# microbiota_relAbund <- subset(microbiota_by_phylum)
+# microbiota_relAbund <- subset(microbiota_by_phylum, select=-c(Grouping))
+microbiota_relAbund <- subset(microbiota_by_phylum)
 # behavioral_cont_data <- behavioral_data
 behavioral_cont_data <- subset (behavioral_data,
                                 select=-c(diet_group_ireland, Addiction_categorization_LP))
-head(microbiota_relAbund)
-head(behavioral_cont_data)
 microbio_behavioral_merged <- merge (microbiota_relAbund, behavioral_cont_data, by= "mouse_id")
 head(microbio_behavioral_merged)
 microbio_behavioral_merged <- subset (microbio_behavioral_merged,select=-c(Var.2, Grouping))
 
-## phylum
-data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Verrucomicrobia:Actinobacteria)%>%
+## taxa
+data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, first_taxon:last_taxon)%>%
                gather(behavior_idx, index, Persistence_EP:Acquisition_stability)
 ## family
 # data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Alcaligenaceae:Others)%>%
@@ -101,7 +98,7 @@ library(broom) # Convert results of statistical functions (lm, t.test, cor.test,
 # library(lubridate)
 
 data_nest <- mutate(data_nest, model = map(data, cor_fun))
-data_nest
+
 
 # str(slice(data_nest, 1))
 
