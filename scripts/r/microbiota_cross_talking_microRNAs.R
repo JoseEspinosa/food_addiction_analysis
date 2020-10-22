@@ -1,4 +1,3 @@
-#!/usr/bin/env Rscript
 
 #############################################################################
 ### Jose Espinosa-Carrasco CB-CRG Group. Sep 2020                         ###
@@ -6,9 +5,9 @@
 ### Cross-talking between behavior and microbiota                         ###
 #############################################################################
 
-library(ggplot2)
-library(tidyverse)
-library(dplyr)
+# library(ggplot2)
+# library(tidyverse)
+# library(dplyr)
 
 ## Functions
 transpose_df <- function(df) {
@@ -29,9 +28,9 @@ first_up <- function(x) {
 }
 
 ### microbiota data
-# taxon <- "phylum"; sep_f="\t"; first_taxon <- 'Verrucomicrobia'; last_taxon <- 'Actinobacteria'
-# taxon <- "family"; sep_f=";"; first_taxon <- 'Alcaligenaceae';last_taxon <- 'Others'
-taxon <- "genus"; sep_f=";"; first_taxon<-'Acetatifactor'; last_taxon<-'Tyzzerella';
+# taxon <- "phylum"; sep_f=";"; first_taxon <- 'Verrucomicrobia'; last_taxon <- 'Actinobacteria'; axis_text_size_y <- 16
+# taxon <- "family"; sep_f=";"; first_taxon <- 'Alcaligenaceae';last_taxon <- 'Others'; axis_text_size_y <- 12
+taxon <- "genus"; sep_f=";"; first_taxon<-'Acetatifactor'; last_taxon<-'Tyzzerella'; axis_text_size_y <- 10
 
 home_dir <- Sys.getenv("HOME")
 rel_abundance_by_taxon <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, ".csv")
@@ -48,7 +47,14 @@ microbiota_by_taxon <- read.csv(paste0(home_dir, "/tmp.csv"),
                                 dec=",",
                                 check.names = F,
                                 stringsAsFactors = F)
-# head(microbiota_by_taxon)
+head(microbiota_by_taxon)
+
+## all addicts
+# microbiota_by_taxon <- microbiota_by_taxon; suffix <- "_all"; title_tag <- "All individuals"
+## Only addicts
+microbiota_by_taxon <- subset(microbiota_by_taxon, Grouping=="Addict"); suffix <- "_addict"; title_tag <- "Addict individuals"
+# Only no addicts
+# microbiota_by_taxon <- subset(microbiota_by_taxon, Grouping=="Non-Addict"); suffix <- "_no_addict"; title_tag <- "No addict individuals"
 
 # microRNAs data
 # discovery
@@ -92,23 +98,29 @@ miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
 
 ####################################
 ## Only dataframe selected columns
-microbiota_relAbund <- subset(microbiota_by_taxon, select=-c(Grouping))
-# miRNAs_data <- miRNAs_data_selected
-microbio_behavioral_merged <- merge (microbiota_relAbund, miRNAs_data, by= "mouse_id")
+microbiota_relAbund <- subset(microbiota_by_taxon, 
+                              select=-c(Grouping))
+
+#################
+# Selected miRNAs
+miRNAs_data <- miRNAs_data_selected
+
+#################
+# All miRNAs
+microbio_behavioral_merged <- merge (microbiota_relAbund, 
+                                     miRNAs_data, 
+                                     by= "mouse_id")
 # head(microbio_behavioral_merged)
 
 ## All miRNAs
-first_miRNA <- 'mmu-miR-34c-3p'; last_miRNA <- 'mmu-miR-7666-3p';
-axis_text_size<-24; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
-width_p <- 45; height_p <- 14
+# first_miRNA <- 'mmu-miR-34c-3p'; last_miRNA <- 'mmu-miR-7666-3p';
+# axis_text_size_x <- 8; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
+# width_p <- 45; height_p <- 14
 
 ## Selected miRNAs
-# first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p';
-# axis_text_size<-16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
-# width_p <- 20; height_p <- 12
-
-## Genus needs smaller labels
-# axis_text_size<-8
+first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p';
+axis_text_size_x <- 16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
+width_p <- 20; height_p <- 12
 
 ## Variables
 data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, first_taxon:last_taxon)%>%
@@ -133,9 +145,11 @@ data_nest <- mutate(data_nest, model = map(data, cor_fun))
 # str(slice(data_nest, 1))
 
 corr_pr <- select(data_nest, -data) %>% unnest()
+
 corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
-title_p <- paste("Correlations between miRNA expression and", first_up(taxon), "relative abundances\n")
-axis_text_size<-18
+title_p <- paste("Correlations between miRNA expression and", 
+                 first_up(taxon), "relative abundances\n", title_tag)
+# axis_text_size<-18
 hm <- ggplot() + geom_tile(data = corr_pr,
                            # aes(taxon, miRNA, fill = estimate),
                            aes(miRNA, taxon, fill = estimate),
@@ -163,15 +177,15 @@ hm <- ggplot() + geom_tile(data = corr_pr,
             panel.border = element_blank(),
             panel.background = element_blank(),
             axis.ticks = element_blank(),
-            axis.text = element_text(size=axis_text_size),
+            axis.text.x = element_text(size=axis_text_size_x, angle=90),
+            axis.text.y = element_text(size=axis_text_size_y),
             plot.title = element_text(size=24, hjust = 0.5),
-            axis.text.x = element_text(angle=90),
             legend.text = element_text( size=14))
-
+# hm
 out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_microbio_miRNAs/")
 dpi_q <- 200
 extension_img <- ".png"
-hm
-ggsave (hm, file=paste0(out_dir, "heatmap_", microbio_set ,"_microbio_", taxon, extension_img), 
+
+ggsave (hm, file=paste0(out_dir, "heatmap_", microbio_set ,"_microbio_", taxon, suffix, extension_img), 
         width = width_p, height = height_p, dpi=dpi_q)
 
