@@ -49,11 +49,13 @@ microbiota_by_taxon <- read.csv(paste0(home_dir, "/tmp.csv"),
                                 stringsAsFactors = F)
 head(microbiota_by_taxon)
 
-## all addicts
-# microbiota_by_taxon <- microbiota_by_taxon; suffix <- "_all"; title_tag <- "All individuals"
+## All animals
+microbiota_by_taxon <- microbiota_by_taxon; suffix <- "_all"; title_tag <- "All individuals"
+
 ## Only addicts
-microbiota_by_taxon <- subset(microbiota_by_taxon, Grouping=="Addict"); suffix <- "_addict"; title_tag <- "Addict individuals"
-# Only no addicts
+# microbiota_by_taxon <- subset(microbiota_by_taxon, Grouping=="Addict"); suffix <- "_addict"; title_tag <- "Addict individuals"
+
+## Only no addicts
 # microbiota_by_taxon <- subset(microbiota_by_taxon, Grouping=="Non-Addict"); suffix <- "_no_addict"; title_tag <- "No addict individuals"
 
 # microRNAs data
@@ -82,45 +84,41 @@ miRNAs_data_to_transp <- merge(miRNAs_data_replica,
 miRNAs_data <- transpose_df(miRNAs_data_to_transp)
 miRNAs_data$mouse_id <- row.names(miRNAs_data)
 
-## Select miRNAs from Elena's table
-miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
-                                                     'mmu-miR-876-5p',
-                                                     'mmu-miR-211-5p',
-                                                     'mmu-miR-3085-3p',
-                                                     'mmu-miR-665-3p',
-                                                     'mmu-miR-3072-3p',
-                                                     'mmu-miR-124-3p',
-                                                     'mmu-miR-29c-3p',
-                                                     'mmu-miR-544-3p',
-                                                     'mmu-miR-137-3p',
-                                                     'mmu-miR-100-5p',
-                                                     'mmu-miR-192-5p'))
-
-####################################
-## Only dataframe selected columns
-microbiota_relAbund <- subset(microbiota_by_taxon, 
-                              select=-c(Grouping))
-
 #################
 # Selected miRNAs
-miRNAs_data <- miRNAs_data_selected
+## Select miRNAs from Elena's table
+# miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
+#                                                      'mmu-miR-876-5p',
+#                                                      'mmu-miR-211-5p',
+#                                                      'mmu-miR-3085-3p',
+#                                                      'mmu-miR-665-3p',
+#                                                      'mmu-miR-3072-3p',
+#                                                      'mmu-miR-124-3p',
+#                                                      'mmu-miR-29c-3p',
+#                                                      'mmu-miR-544-3p',
+#                                                      'mmu-miR-137-3p',
+#                                                      'mmu-miR-100-5p',
+#                                                      'mmu-miR-192-5p'))
+# 
+# miRNAs_data <- miRNAs_data_selected
+# first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p';
+# axis_text_size_x <- 16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
+# width_p <- 20; height_p <- 12
+#################
 
 #################
 # All miRNAs
-microbio_behavioral_merged <- merge (microbiota_relAbund, 
-                                     miRNAs_data, 
+first_miRNA <- 'mmu-miR-34c-3p'; last_miRNA <- 'mmu-miR-7666-3p';
+axis_text_size_x <- 8; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
+width_p <- 45; height_p <- 14
+###############
+
+microbiota_relAbund <- subset(microbiota_by_taxon,
+                              select=-c(Grouping))
+
+microbio_behavioral_merged <- merge (microbiota_relAbund,
+                                     miRNAs_data,
                                      by= "mouse_id")
-# head(microbio_behavioral_merged)
-
-## All miRNAs
-# first_miRNA <- 'mmu-miR-34c-3p'; last_miRNA <- 'mmu-miR-7666-3p';
-# axis_text_size_x <- 8; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
-# width_p <- 45; height_p <- 14
-
-## Selected miRNAs
-first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p';
-axis_text_size_x <- 16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
-width_p <- 20; height_p <- 12
 
 ## Variables
 data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, first_taxon:last_taxon)%>%
@@ -145,8 +143,33 @@ data_nest <- mutate(data_nest, model = map(data, cor_fun))
 # str(slice(data_nest, 1))
 
 corr_pr <- select(data_nest, -data) %>% unnest()
-
 corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
+
+###########
+## FDR
+fdr_cutoff <- 0.2
+test_p <- corr_pr$p.value
+# class (corr_pr$p.value)
+
+# test_p<-c(test_p,0.001459265)
+# p.adjust(test_p, method = 'BH', n = length(test_p))
+corr_pr$fdr <- p.adjust(corr_pr$p.value, method = 'BH', n = length(corr_pr$p.value))
+corr_pr <- mutate(corr_pr, sig = ifelse(fdr < fdr_cutoff, "Sig.", "Non Sig."))
+corr_pr$fdr
+
+## The result of p.adjust and qvalue is the same
+# BiocManager::install("qvalue")
+# library(qvalue)
+## Plot
+# q_value <- qvalue(corr_pr$p.value)
+# plot(q_value)
+# corr_pr$qvalue <- q_value$qvalues
+# corr_pr <- mutate(corr_pr, sig = ifelse(qvalue <0.2, "Sig.", "Non Sig."))
+# corr_pr$qvalue
+
+#######
+sign <- subset(corr_pr, fdr<0.2)
+sign
 title_p <- paste("Correlations between miRNA expression and", 
                  first_up(taxon), "relative abundances\n", title_tag)
 # axis_text_size<-18
