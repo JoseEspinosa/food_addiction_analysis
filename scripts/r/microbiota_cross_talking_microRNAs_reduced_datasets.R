@@ -146,7 +146,35 @@ miRNAs_data <- transpose_df(miRNAs_data_to_transp)
 # # class(miRNAs_data_pseudoCts[3,5])
 
 # miRNAs_data_transf$mouse_id <- row.names(miRNAs_data)
-miRNAs_data$mouse_id <- row.names(miRNAs_data)
+miRNAs_data[miRNAs_data == 0] <-1000
+x_v<- as.numeric(miRNAs_data[1,])
+
+mean(numeric(log(x)))
+
+exp(rowMeans(as.vector(log(x))))
+
+install.packages("psych")          # Install psych package
+library("psych")    
+x <- c(8, 9, 4, 1, 6, 4, 6, 2, 5)
+g_mean <- psych::geometric.mean(x_v)
+
+log(x_v/g_mean)
+
+Hotelling::clr(miRNAs_data[1,])
+str(miRNAs_data[1,])
+which(miRNAs_data[1,]==0)
+
+install.packages("remotes")
+library("remotes")
+install.packages("devtools")
+devtools::install_github("ajabadi/mixOmics2")
+library(ajabadi/mixOmics2)
+
+
+##### Test microbiome package
+## https://www.nicholas-ollberding.com/post/introduction-to-the-statistical-analysis-of-microbiome-data-in-r/
+library("microbiome")
+microbiome::transform(miRNAs_data, "clr")
 
 #################
 # Selected miRNAs
@@ -163,7 +191,10 @@ miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
                                                      'mmu-miR-137-3p',
                                                      'mmu-miR-100-5p',
                                                      'mmu-miR-192-5p'))
-# Hotelling::clr(miRNAs_data_selected)
+## CLR for miRNAS
+Hotelling::clr(miRNAs_data_selected[,-1])
+
+Hotelling::clr(miRNAs_data[2,-1])
 
 miRNAs_data <- miRNAs_data_selected
 
