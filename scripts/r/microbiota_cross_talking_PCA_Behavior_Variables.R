@@ -30,16 +30,16 @@ first_up <- function(x) {
 
 ### microbiota data
 # axis_text_size<-24;
-# taxon <- "phylum"; sep_f="\t";
+# taxon <- "phylum"; sep_f=";";
 # first_taxon <- 'Verrucomicrobia';last_taxon <- 'Actinobacteria';
 
-# axis_text_size<-24;
-# taxon <- "family"; sep_f=";"
-# first_taxon <- 'Alcaligenaceae';last_taxon <- 'Others';
+axis_text_size<-24;
+taxon <- "family"; sep_f=";"
+first_taxon <- 'Alcaligenaceae';last_taxon <- 'Others';
 
-axis_text_size<-14;
-taxon <- "genus"; sep_f=";"
-first_taxon <- 'Acetatifactor';last_taxon <- 'Tyzzerella';
+# axis_text_size<-14;
+# taxon <- "genus"; sep_f=";"
+# first_taxon <- 'Acetatifactor';last_taxon <- 'Tyzzerella';
 
 home_dir <- Sys.getenv("HOME")
 rel_abundance_by_taxon <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, ".csv")
@@ -58,6 +58,9 @@ microbiota_by_taxon <- read.csv(paste0(home_dir, "/tmp.csv"),
                                  check.names = F,
                                  stringsAsFactors = F)
 head(microbiota_by_taxon)
+
+## Only addicts
+microbiota_by_taxon <-subset(microbiota_by_taxon, Grouping=="Addict")
 
 # Only behavioral variables used in PCA
 behavioral_data_path <- paste0(home_dir,
@@ -80,7 +83,7 @@ microbio_behavioral_merged <- merge (microbiota_relAbund, behavioral_cont_data, 
 head(microbio_behavioral_merged)
 head(behavioral_cont_data)
 
-## phylum
+## taxa
 data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, first_taxon:last_taxon)%>%
         gather(behavior_idx, index, Persistence_LP:Aversive_LP)
 
@@ -99,7 +102,7 @@ library(broom) # Convert results of statistical functions (lm, t.test, cor.test,
 # library(lubridate)
 
 data_nest <- mutate(data_nest, model = map(data, cor_fun))
-data_nest
+# data_nest
 
 # str(slice(data_nest, 1))
 
