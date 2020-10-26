@@ -68,38 +68,50 @@ microbiota_by_taxon <- read.csv(paste0(home_dir, "/tmp.csv"),
                                 check.names = F,
                                 stringsAsFactors = F)
 
-
-
 ########################
 ## Filter 
-## Half of the animals has at least 0.1 relative abundance
-# microbiota_by_taxon <- microbiota_by_taxon [, -1]
-# microbiota_by_taxon_filt <- microbiota_by_taxon [ , colSums(microbiota_by_taxon > 0.1) >= 6 ]
+## Half of the animals in a group has at least 0.1 relative abundance (just brute approach
+## not taking into account in which group these relative abundance 
+## Old command -> microbiota_by_taxon_filt <- microbiota_by_taxon [ , colSums(microbiota_by_taxon > 0.1) >= 6 ]
+## n=5
+# taxon_to_keep <- colnames(microbiota_by_taxon [ ,  colSums(microbiota_by_taxon [, c(-1,-2)] > 0.1) >= 5 ])
+## n=6
+# taxon_to_keep <- colnames(microbiota_by_taxon [ ,  colSums(microbiota_by_taxon [, c(-1,-2)] > 0.1) >= 6 ])
 
 # microbiota_by_taxon[,c(-1,-2)] %>%
 #   group_by(Grouping) %>% 
-#   filter(n()>50, colSums(valuation==0) <10)
+#   filter(n()>50, colSums(valuation==0) < 10)
 
+## As explained here: https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-020-0710-2#Sec2
+## One way of filtering is: min (number of samples in CF, number of samples in Healthy)/2))
 min_n_samples <- microbiota_by_taxon[,c(-1,-2)]  %>%
                   group_by(Grouping) %>%
-                  summarise_all(funs(sum(.!=0))) %>%
-                  summarise_if(is.numeric, min) %>%
+                  summarise_all(funs(sum(.!=0))) %>% #n of samples equal to zero
+                  summarise_if(is.numeric, min) %>% #get the min from the two
                   as.data.frame()
 
-min_n_samples <- floor(min_n_samples/2)
+## At least n samples in the group with less samples
+min_n_samples_with_val <- 4
+min_n_samples_filt <- min_n_samples
+min_n_samples_filt [ (min_n_samples < min_n_samples_with_val) ] <- 1000
 
+min_n_samples_filt <- floor(min_n_samples_filt/2)
+# min_n_samples_filt <- floor(min_n_samples/2)
+
+## number of samples with at least 0.1 relative abundance per group
 n_0.1_rel_ab <- microbiota_by_taxon[,c(-1,-2)]  %>%
-  group_by(Grouping) %>%
-  summarise_all(funs(sum(.>0.1)))%>%
-  summarise_if(is.numeric, min) %>%
-  as.data.frame()
+                  group_by(Grouping) %>%
+                  summarise_all(funs(sum(.>0.1)))%>%
+                  summarise_if(is.numeric, max) %>%
+                  as.data.frame()
 
-df_to_filter <- dplyr::bind_rows(min_n_samples, n_0.1_rel_ab)
+df_to_filter <- dplyr::bind_rows(min_n_samples_filt, n_0.1_rel_ab)
 
 v <- df_to_filter[2,] - df_to_filter[1,] 
-genus_to_keep <- colnames(v[which(v >= 1)])
 
-microbiota_by_taxon_filt <- subset(microbiota_by_taxon, select=genus_to_keep)
+taxon_to_keep <- colnames(v[which(v > 1)])
+
+microbiota_by_taxon_filt <- subset(microbiota_by_taxon, select=taxon_to_keep)
 
 microbiota_by_taxon_filt_pseudoCts <- microbiota_by_taxon_filt
 
@@ -233,11 +245,11 @@ microbio_behavioral_merged <- merge (microbiota_relAbund,
                                      miRNAs_data,
                                      by= "mouse_id")
 
-## Double check
+## all filtered miRNAs and taxons
 first_taxon<-"Alistipes"
-last_taxon <- "Ruminococcaceae_UCG014"
-# first_miRNA <- "bta-miR-2478";
-# last_miRNA <- "xtr-miR-9b-5p"
+last_taxon <- "Tyzzerella"
+first_miRNA <- "bta-miR-2478";
+last_miRNA <- "xtr-miR-9b-5p"
 
 ## selected miRNAs
 # microbio_behavioral_merged <- merge (microbiota_relAbund,
@@ -264,9 +276,9 @@ cor_fun <- function(df) cor.test(df$microbio_rel_ab, df$value, method = cor_meth
 
 plot(data_nest[[3]][[40]]$microbio_rel_ab, data_nest[[3]][[40]]$value)
 
-# library(fs)
+library(qvalue)
 # library(lubridate)
-data_nest
+# data_nest
 data_nest <- mutate(data_nest, model = map(data, cor_fun))
 # data_nest
 
@@ -278,7 +290,7 @@ corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
 
 ###########
 ## FDR
-fdr_cutoff <- 0.2
+fdr_cutoff <- 0.3
 test_p <- corr_pr$p.value 
 min(test_p)
 # class (corr_pr$p.value)
@@ -308,7 +320,7 @@ corr_pr <- mutate(corr_pr, sig = ifelse(qvalue <0.2, "Sig.", "Non Sig."))
 corr_pr$qvalue
 
 #######
-sign <- subset(corr_pr, fdr<0.2)
+sign <- subset(corr_pr, fdr<0.3)
 sign
 title_tag <- "log transf"
 title_p <- paste("Correlations between miRNA expression and", 
@@ -347,12 +359,12 @@ hm <- ggplot() + geom_tile(data = corr_pr,
         legend.text = element_text( size=14))
 hm
 
-out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_microbio_miRNAs/")
+out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_microbio_miRNAs_transformed/")
 dpi_q <- 200
 extension_img <- ".png"
-suffix <- "testttttt"
-microbio_set <- "sssss"
-ggsave (hm, file=paste0(out_dir, "heatmap_", microbio_set ,"_microbio_logTransform", taxon, suffix, extension_img), 
+# suffix <- "testttttt"
+# microbio_set <- "sssss"
+ggsave (hm, file=paste0(out_dir, "heatmap_", microbio_set ,"_microbio_logTransform_", taxon, suffix, extension_img), 
         width = width_p, height = height_p, dpi=dpi_q)
 
 
