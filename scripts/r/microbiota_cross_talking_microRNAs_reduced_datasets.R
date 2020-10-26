@@ -13,6 +13,7 @@ library(tidyverse)
 library(dplyr)
 library(broom) # Convert results of statistical functions (lm, t.test, cor.test, etc.) into tidy tables
 library(Hotelling) # center log ratio transformation
+library(microbiome)
 
 ## Functions
 transpose_df <- function(df) {
@@ -44,12 +45,30 @@ microbiota_by_taxon_ori <- read.csv(rel_abundance_by_taxon,
                                     check.names = F,
                                     stringsAsFactors = F)
 
+## Only values for microbiome transform
+rel_abundance_by_taxon_int <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, "_noIDs.csv")
+microbiota_by_taxon_int <- read.csv(rel_abundance_by_taxon_int,
+                                    dec=",",
+                                    sep=sep_f,
+                                    header = F,
+                                    check.names = F,
+                                    stringsAsFactors = F)
+
+# My own pseudocount, not needed since microbiome package deals with it
+# microbiota_by_taxon_int[microbiota_by_taxon_int == 0] <- 0.001
+tr_microbiome <- microbiome::transform(microbiota_by_taxon_int [,-1], "clr")
+df_transf <- cbind(microbiota_by_taxon_int [,1], tr_microbiome)
+
+tranf_rel_abundances <- transpose_df(df_transf)
+
 microbiota_by_taxon_tmp <- transpose_df(microbiota_by_taxon_ori)
 write.csv(microbiota_by_taxon_tmp, paste0(home_dir, "/tmp.csv"))
 microbiota_by_taxon <- read.csv(paste0(home_dir, "/tmp.csv"),
                                 dec=",",
                                 check.names = F,
                                 stringsAsFactors = F)
+
+
 
 ########################
 ## Filter 
@@ -85,11 +104,30 @@ microbiota_by_taxon_filt <- subset(microbiota_by_taxon, select=genus_to_keep)
 microbiota_by_taxon_filt_pseudoCts <- microbiota_by_taxon_filt
 
 ## Adding pseudo-counts from here # https://genominfo.org/journal/view.php?number=549
-microbiota_by_taxon_filt_pseudoCts[microbiota_by_taxon_filt_pseudoCts == 0] <- 0.001
+# microbiota_by_taxon_filt_pseudoCts[microbiota_by_taxon_filt_pseudoCts == 0] <- 0.001
 
 ## Esta bien by rows porque cada row es un sample, un raton
-microbiota_by_taxon_filt_transf <- cbind (microbiota_by_taxon[,c(1:3)], 
-                                          Hotelling::clr(microbiota_by_taxon_filt_pseudoCts[,c(-1,-2,-3)]))
+## with hotelling, descarted -inf in miRNAs
+# hotelling_clr_transform <- Hotelling::clr(microbiota_by_taxon_filt_pseudoCts)
+# 
+# microbiota_by_taxon_filt_clr_hotelling <- cbind (microbiota_by_taxon[,c(2:3)],
+#                                                  hotelling_clr_transform)
+
+## First needs to be transpose
+## With my own-pseudo-accounts
+# microbiota_by_taxon_filt_pseudoCts_transp <- as.data.frame(t(microbiota_by_taxon_filt_pseudoCts))
+# 
+# clr_microbiomePack_transform <- microbiome::transform(microbiota_by_taxon_filt_pseudoCts_transp, "clr")
+# clr_microbiomePack_transf_toBind <- as.data.frame(t(clr_microbiomePack_transform))
+# str (clr_microbiomePack_transf_toBind)
+# str (microbiota_by_taxon[,c(1:3)])
+# microbiota_by_taxon_filt_clr_microbiome <- cbind (microbiota_by_taxon[,c(2:3)], clr_microbiomePack_transf_toBind)
+
+microbiota_by_taxon_filt
+microbiota_by_taxon_filt_transp <- as.data.frame(t(microbiota_by_taxon_filt))
+clr_microbiomePack_transform <- microbiome::transform(microbiota_by_taxon_filt_transp, "clr")
+clr_microbiomePack_transf_toBind <- as.data.frame(t(clr_microbiomePack_transform))
+microbiota_by_taxon_filt_clr_microbiome <- cbind (microbiota_by_taxon[,c(2:3)], clr_microbiomePack_transf_toBind)
 
 ### All animals
 ## microbiota_by_taxon <- microbiota_by_taxon; 
@@ -123,61 +161,15 @@ miRNAs_data_replica <- read.csv(miRNAs_data_path_replica,
 miRNAs_data_to_transp <- merge(miRNAs_data_replica, 
                                miRNAs_data_discovery, 
                                by="miRNA")
-## show rows with zeros
-# dd <-miRNAs_data_to_transp
-# filter_all(dd, any_vars(. == 0))
-# miRNAs_data_to_transp[5,]
-# Hotelling::clr(miRNAs_data_to_transp[5,-1])
 
-miRNAs_data <- transpose_df(miRNAs_data_to_transp)
-# miRNAs_data_pseudoCts <- miRNAs_data
-# miRNAs_data_transf <- Hotelling::clr(as.matrix(miRNAs_data_pseudoCts[1,]))
-# 
-# exp(mean(log(as.matrix(miRNAs_data_pseudoCts[1,]))))
-# 
-# v<- as.vector(log(miRNAs_data_pseudoCts[1,]))
-# mean(v)
-# class(v)
-# exp(mean(log(miRNAs_data_pseudoCts[1,])))
-# # miRNAs_data_pseudoCts[miRNAs_data_pseudoCts == 0] <- 0.001
-# 
-# ## Esta bien by rows porque cada row es un sample, un raton
-# miRNAs_data_transf <- Hotelling::clr(miRNAs_data_pseudoCts)
-# # class(miRNAs_data_pseudoCts[3,5])
-
-# miRNAs_data_transf$mouse_id <- row.names(miRNAs_data)
-miRNAs_data[miRNAs_data == 0] <-1000
-x_v<- as.numeric(miRNAs_data[1,])
-
-mean(numeric(log(x)))
-
-exp(rowMeans(as.vector(log(x))))
-
-install.packages("psych")          # Install psych package
-library("psych")    
-x <- c(8, 9, 4, 1, 6, 4, 6, 2, 5)
-g_mean <- psych::geometric.mean(x_v)
-
-log(x_v/g_mean)
-
-Hotelling::clr(miRNAs_data[1,])
-str(miRNAs_data[1,])
-which(miRNAs_data[1,]==0)
-
-install.packages("remotes")
-library("remotes")
-install.packages("devtools")
-devtools::install_github("ajabadi/mixOmics2")
-library(ajabadi/mixOmics2)
-
-
-##### Test microbiome package
-## https://www.nicholas-ollberding.com/post/introduction-to-the-statistical-analysis-of-microbiome-data-in-r/
-library("microbiome")
-microbiome::transform(miRNAs_data, "clr")
+## mice (samples in columns for microbiome package), before transpose
+## Important to use cbind.data.frame to avoid conversion to character!!!
+# miRNAs_data_to_transp_transform <-  as.data.frame(cbind.data.frame(miRNAs_data_to_transp[,1], microbiome::transform(miRNAs_data_to_transp[,-1], "clr")))
+# miRNAs_data <- transpose_df(miRNAs_data_to_transp_transform)
+# miRNAs_data$mouse_id <- row.names(miRNAs_data)
 
 #################
-# Selected miRNAs
+# Selected miRNAs from transformed data
 ## Select miRNAs from Elena's table
 miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
                                                      'mmu-miR-876-5p',
@@ -191,14 +183,35 @@ miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
                                                      'mmu-miR-137-3p',
                                                      'mmu-miR-100-5p',
                                                      'mmu-miR-192-5p'))
-## CLR for miRNAS
-Hotelling::clr(miRNAs_data_selected[,-1])
 
-Hotelling::clr(miRNAs_data[2,-1])
+# first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p';
+# axis_text_size_x <- 16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
+# width_p <- 20; height_p <- 12
 
-miRNAs_data <- miRNAs_data_selected
+#################
+# Selected miRNAs from not transformed data
+## Select miRNAs from Elena's table
+miRNAs_data<-miRNAs_data_to_transp
+miRNAs_data_selected_to_transform <-miRNAs_data[miRNAs_data$miRNA %in% c('mouse_id',
+                                                'mmu-miR-876-5p',
+                                                'mmu-miR-211-5p',
+                                                'mmu-miR-3085-3p',
+                                                'mmu-miR-665-3p',
+                                                'mmu-miR-3072-3p',
+                                                'mmu-miR-124-3p',
+                                                'mmu-miR-29c-3p',
+                                                'mmu-miR-544-3p',
+                                                'mmu-miR-137-3p',
+                                                'mmu-miR-100-5p',
+                                                'mmu-miR-192-5p'), ]
+                     
 
-first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p';
+miRNAs_data_to_transp_transform <-  as.data.frame(cbind.data.frame(miRNAs_data_selected_to_transform[,1], microbiome::transform(miRNAs_data_selected_to_transform[,-1], "clr")))
+miRNAs_data <- transpose_df(miRNAs_data_to_transp_transform)
+miRNAs_data$mouse_id <- row.names(miRNAs_data)
+miRNAs_data_selected <- miRNAs_data
+
+first_miRNA <- 'mmu-miR-100-5p'; last_miRNA <- 'mmu-miR-876-5p';
 axis_text_size_x <- 16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
 width_p <- 20; height_p <- 12
 
@@ -210,48 +223,55 @@ width_p <- 20; height_p <- 12
 # width_p <- 45; height_p <- 14
 
 ###############
-microbiota_relAbund <- subset(microbiota_by_taxon_filt_transf,
+# microbiota_relAbund <- subset(microbiota_by_taxon_filt_transf,
+#                               select=-c(Grouping))
+microbiota_relAbund <- subset(microbiota_by_taxon_filt_clr_microbiome, 
                               select=-c(Grouping))
 
+## all miRNAs
 microbio_behavioral_merged <- merge (microbiota_relAbund,
                                      miRNAs_data,
                                      by= "mouse_id")
+
+## Double check
 first_taxon<-"Alistipes"
-last_taxon <- "Tyzzerella"
-first_miRNA <- "bta-miR-2478"; 
-last_miRNA <- "xtr-miR-9b-5p"
-
-# last
-first_taxon<-"Anaerotruncus"
 last_taxon <- "Ruminococcaceae_UCG014"
-first_miRNA <- "mmu-miR-876-5p"; 
-last_miRNA <- "mmu-miR-192-5p"
+# first_miRNA <- "bta-miR-2478";
+# last_miRNA <- "xtr-miR-9b-5p"
 
-## Test con selected
-# first_miRNA <- "bta-miR-2478"; 
-# last_miRNA <- "mmu-let-7e-3p"
+## selected miRNAs
+# microbio_behavioral_merged <- merge (microbiota_relAbund,
+#                                      miRNAs_data_selected,
+#                                      by= "mouse_id")
+microbio_behavioral_merged 
+
+# first_taxon<-"Alistipes"
+# last_taxon <- "Ruminococcaceae_UCG014"
+# first_miRNA <- "mmu-miR-876-5p"; 
+# last_miRNA <- "mmu-miR-192-5p"
 
 ## Variables
 data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, first_taxon:last_taxon)%>%
         gather(miRNA, value, first_miRNA:last_miRNA)
 
 data_nest <- group_by(data, taxon, miRNA) %>% nest()
-
+  
 
 # data_nest <- group_by(data, city, telecon) %>% nest()
 # cor_method <- "pearson"
 cor_method <- "spearman"
 cor_fun <- function(df) cor.test(df$microbio_rel_ab, df$value, method = cor_method) %>% tidy()
 
+plot(data_nest[[3]][[40]]$microbio_rel_ab, data_nest[[3]][[40]]$value)
 
 # library(fs)
 # library(lubridate)
-
-data_nest <- mutate(data_nest, model = map(data, cor_fun))
 data_nest
+data_nest <- mutate(data_nest, model = map(data, cor_fun))
+# data_nest
 
 # str(slice(data_nest, 1))
-dim(data_nest[[3]][[1]]$value)
+# dim(data_nest[[3]][[1]]$value)
 
 corr_pr <- select(data_nest, -data) %>% unnest()
 corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
@@ -264,10 +284,11 @@ min(test_p)
 # class (corr_pr$p.value)
 head(test_p)
 test_p<- test_p[order(test_p)]
-test_p <- c(0.00001459265, test_p )
-qvalue(test_p)
-class (corr_pr$p.value)
+# test_p <- c(0.00001459265, test_p )
+min(qvalue(corr_pr$p.value)$qvalues)
 
+class (corr_pr$p.value)
+p.adjust(corr_pr$p.value, method="fdr", n=length(corr_pr$p.value))
 min(p.adjust(test_p, method = 'BH', n = length(test_p)))
 plot(qvalue(corr_pr$p.value)$qvalues)
 
@@ -279,6 +300,7 @@ corr_pr$fdr
 # BiocManager::install("qvalue")
 # library(qvalue)
 ## Plot
+plot(corr_pr$p.value)
 q_value <- qvalue(corr_pr$p.value)
 plot(q_value)
 corr_pr$qvalue <- q_value$qvalues
@@ -344,3 +366,45 @@ clr(bottle.df[1,],"Number")
 # t(sapply(split(microbiota_by_taxon_filt[,c(-1,-2,-3)], c("Addict","Non-Addict")), function (x) colSums(x)>0.1)) 
 # t(sapply(split(microbiota_by_taxon_filt[,c(-1,-2,-3)], c("Addict","Non-Addict")), function (x) print(x)))
 # function(x) length(x[x<0])
+
+## Checking that the transform gives the same result
+## To be sure two thinks are important:
+## 1 - microbiome::transform directly puts pseudocounts so we need to control by first
+## substituting zeros as in hotelling
+## 2- microbiome samples (mouse) should be in the columns for microbiome::transform
+## and in rows for hotelling:clr
+tr_microbiome <- microbiome::transform(microbiota_by_taxon_int [,-1], "clr")
+
+microbiota_by_taxon[microbiota_by_taxon == 0] <- 0.001
+microbiota_by_taxon_int[microbiota_by_taxon_int == 0] <- 0.001
+tr_hotelling <- Hotelling::clr(microbiota_by_taxon [1,c(-1,-2,-3)])
+
+v <- as.data.frame(transpose(microbiota_by_taxon [1,c(-1,-2,-3)]))
+Hotelling::clr(microbiota_by_taxon[1, c(-1,-2,-3)])
+microbiome::transform(microbiota_by_taxon_int[,c(2,3,4)],"clr")[,1]
+x_v<- as.numeric(microbiota_by_taxon_int[,2])
+x_v_ori_tbl<- as.numeric(microbiota_by_taxon[1, c(-1,-2,-3)])
+x_v_ori_tbl
+
+library("psych")    
+
+## toy example of clr
+# x <- c(8, 9, 4, 1, 6, 4, 6, 2, 5)
+# g_mean <- psych::geometric.mean(x_v)
+# log(x_v/g_mean)
+
+g_mean <- psych::geometric.mean(x_v)
+g_mean
+
+log(x_v/g_mean)
+
+g_mean <- psych::geometric.mean(x_v_ori_tbl)
+g_mean
+
+log(x_v/g_mean)
+
+##### Test microbiome package
+## https://www.nicholas-ollberding.com/post/introduction-to-the-statistical-analysis-of-microbiome-data-in-r/
+library("microbiome")
+# This was wrong since mouse should be in columns, BE CAREFUL
+microbiome::transform(miRNAs_data, "clr")
