@@ -72,24 +72,29 @@ miRNAs_data <- transpose_df(miRNAs_data_to_transp)
 miRNAs_data$mouse_id <- row.names(miRNAs_data)
 
 ## Select miRNAs from Elena's table
-miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
-                                                     'mmu-miR-876-5p',
-                                                     'mmu-miR-211-5p',
-                                                     'mmu-miR-3085-3p',
-                                                     'mmu-miR-665-3p',
-                                                     'mmu-miR-3072-3p',
-                                                     'mmu-miR-124-3p',
-                                                     'mmu-miR-29c-3p',
-                                                     'mmu-miR-544-3p',
-                                                     'mmu-miR-137-3p',
-                                                     'mmu-miR-100-5p',
-                                                     'mmu-miR-192-5p'))
+# miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
+#                                                      'mmu-miR-876-5p',
+#                                                      'mmu-miR-211-5p',
+#                                                      'mmu-miR-3085-3p',
+#                                                      'mmu-miR-665-3p',
+#                                                      'mmu-miR-3072-3p',
+#                                                      'mmu-miR-124-3p',
+#                                                      'mmu-miR-29c-3p',
+#                                                      'mmu-miR-544-3p',
+#                                                      'mmu-miR-137-3p',
+#                                                      'mmu-miR-100-5p',
+#                                                      'mmu-miR-192-5p'))
+###################
+## All miRNAs
 # miRNAs_data_selected <-miRNAs_data
+
+###################
+## Merging of behavioral data + miRNAs 
 miRNAs_behavioral_merged <- merge (miRNAs_data_selected, behavioral_data, by= "mouse_id")
-head(miRNAs_behavioral_merged)
+# head(miRNAs_behavioral_merged)
 
 ## All miRNAs
-# first_miRNA <- 'mmu-miR-34c-3p'; last_miRNA <- 'mmu-miR-7666-3p';
+# first_miRNA <- 'bta-miR-2478'; last_miRNA <- 'xtr-miR-9b-5p';
 # axis_text_size<-24; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
 # width_p <- 45; height_p <- 14
 
