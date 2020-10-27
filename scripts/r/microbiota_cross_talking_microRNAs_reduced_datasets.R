@@ -46,20 +46,20 @@ microbiota_by_taxon_ori <- read.csv(rel_abundance_by_taxon,
                                     stringsAsFactors = F)
 
 ## Only values for microbiome transform
-rel_abundance_by_taxon_int <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, "_noIDs.csv")
-microbiota_by_taxon_int <- read.csv(rel_abundance_by_taxon_int,
-                                    dec=",",
-                                    sep=sep_f,
-                                    header = F,
-                                    check.names = F,
-                                    stringsAsFactors = F)
-
-# My own pseudocount, not needed since microbiome package deals with it
-# microbiota_by_taxon_int[microbiota_by_taxon_int == 0] <- 0.001
-tr_microbiome <- microbiome::transform(microbiota_by_taxon_int [,-1], "clr")
-df_transf <- cbind(microbiota_by_taxon_int [,1], tr_microbiome)
-
-tranf_rel_abundances <- transpose_df(df_transf)
+# rel_abundance_by_taxon_int <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, "_noIDs.csv")
+# microbiota_by_taxon_int <- read.csv(rel_abundance_by_taxon_int,
+#                                     dec=",",
+#                                     sep=sep_f,
+#                                     header = F,
+#                                     check.names = F,
+#                                     stringsAsFactors = F)
+# 
+# # My own pseudocount, not needed since microbiome package deals with it
+# # microbiota_by_taxon_int[microbiota_by_taxon_int == 0] <- 0.001
+# tr_microbiome <- microbiome::transform(microbiota_by_taxon_int [,-1], "clr")
+# df_transf <- cbind(microbiota_by_taxon_int [,1], tr_microbiome)
+# 
+# tranf_rel_abundances <- transpose_df(df_transf)
 
 microbiota_by_taxon_tmp <- transpose_df(microbiota_by_taxon_ori)
 write.csv(microbiota_by_taxon_tmp, paste0(home_dir, "/tmp.csv"))
@@ -82,7 +82,8 @@ microbiota_by_taxon <- read.csv(paste0(home_dir, "/tmp.csv"),
 #   group_by(Grouping) %>% 
 #   filter(n()>50, colSums(valuation==0) < 10)
 
-## As explained here: https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-020-0710-2#Sec2
+##############################
+## Filtered based on what is explained here: https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-020-0710-2#Sec2
 ## One way of filtering is: min (number of samples in CF, number of samples in Healthy)/2))
 min_n_samples <- microbiota_by_taxon[,c(-1,-2)]  %>%
                   group_by(Grouping) %>%
@@ -111,9 +112,19 @@ v <- df_to_filter[2,] - df_to_filter[1,]
 
 taxon_to_keep <- colnames(v[which(v > 1)])
 
+## Hardcoded taxons to keep
+taxon_to_keep <- c("Allobaculum",
+                   "Anaeroplasma",
+                   "Blautia",
+                   "Enterorhabdus", 
+                   "Gastranaerophilales_uncultured bacterium",
+                   "Lachnospiraceae_UCG001",
+                   "Lachnospiraceae_UCG006"
+                   )
+
 microbiota_by_taxon_filt <- subset(microbiota_by_taxon, select=taxon_to_keep)
 
-microbiota_by_taxon_filt_pseudoCts <- microbiota_by_taxon_filt
+# microbiota_by_taxon_filt_pseudoCts <- microbiota_by_taxon_filt
 
 ## Adding pseudo-counts from here # https://genominfo.org/journal/view.php?number=549
 # microbiota_by_taxon_filt_pseudoCts[microbiota_by_taxon_filt_pseudoCts == 0] <- 0.001
@@ -135,7 +146,7 @@ microbiota_by_taxon_filt_pseudoCts <- microbiota_by_taxon_filt
 # str (microbiota_by_taxon[,c(1:3)])
 # microbiota_by_taxon_filt_clr_microbiome <- cbind (microbiota_by_taxon[,c(2:3)], clr_microbiomePack_transf_toBind)
 
-microbiota_by_taxon_filt
+# microbiota_by_taxon_filt
 microbiota_by_taxon_filt_transp <- as.data.frame(t(microbiota_by_taxon_filt))
 clr_microbiomePack_transform <- microbiome::transform(microbiota_by_taxon_filt_transp, "clr")
 clr_microbiomePack_transf_toBind <- as.data.frame(t(clr_microbiomePack_transform))
@@ -183,18 +194,18 @@ miRNAs_data_to_transp <- merge(miRNAs_data_replica,
 #################
 # Selected miRNAs from transformed data
 ## Select miRNAs from Elena's table
-miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
-                                                     'mmu-miR-876-5p',
-                                                     'mmu-miR-211-5p',
-                                                     'mmu-miR-3085-3p',
-                                                     'mmu-miR-665-3p',
-                                                     'mmu-miR-3072-3p',
-                                                     'mmu-miR-124-3p',
-                                                     'mmu-miR-29c-3p',
-                                                     'mmu-miR-544-3p',
-                                                     'mmu-miR-137-3p',
-                                                     'mmu-miR-100-5p',
-                                                     'mmu-miR-192-5p'))
+# miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
+#                                                      'mmu-miR-876-5p',
+#                                                      'mmu-miR-211-5p',
+#                                                      'mmu-miR-3085-3p',
+#                                                      'mmu-miR-665-3p',
+#                                                      'mmu-miR-3072-3p',
+#                                                      'mmu-miR-124-3p',
+#                                                      'mmu-miR-29c-3p',
+#                                                      'mmu-miR-544-3p',
+#                                                      'mmu-miR-137-3p',
+#                                                      'mmu-miR-100-5p',
+#                                                      'mmu-miR-192-5p'))
 
 # first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p';
 # axis_text_size_x <- 16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
@@ -217,7 +228,6 @@ miRNAs_data_selected_to_transform <-miRNAs_data[miRNAs_data$miRNA %in% c('mouse_
                                                 'mmu-miR-100-5p',
                                                 'mmu-miR-192-5p'), ]
                      
-
 miRNAs_data_to_transp_transform <-  as.data.frame(cbind.data.frame(miRNAs_data_selected_to_transform[,1], microbiome::transform(miRNAs_data_selected_to_transform[,-1], "clr")))
 miRNAs_data <- transpose_df(miRNAs_data_to_transp_transform)
 miRNAs_data$mouse_id <- row.names(miRNAs_data)
@@ -241,26 +251,26 @@ microbiota_relAbund <- subset(microbiota_by_taxon_filt_clr_microbiome,
                               select=-c(Grouping))
 
 ## all miRNAs
-microbio_behavioral_merged <- merge (microbiota_relAbund,
-                                     miRNAs_data,
-                                     by= "mouse_id")
+# microbio_behavioral_merged <- merge (microbiota_relAbund,
+#                                      miRNAs_data,
+#                                      by= "mouse_id")
 
 ## all filtered miRNAs and taxons
-first_taxon<-"Alistipes"
-last_taxon <- "Tyzzerella"
-first_miRNA <- "bta-miR-2478";
-last_miRNA <- "xtr-miR-9b-5p"
+# first_taxon<-"Alistipes"
+# last_taxon <- "Tyzzerella"
+# first_miRNA <- "bta-miR-2478";
+# last_miRNA <- "xtr-miR-9b-5p"
 
 ## selected miRNAs
-# microbio_behavioral_merged <- merge (microbiota_relAbund,
-#                                      miRNAs_data_selected,
-#                                      by= "mouse_id")
+microbio_behavioral_merged <- merge (microbiota_relAbund,
+                                     miRNAs_data_selected,
+                                     by= "mouse_id")
 microbio_behavioral_merged 
 
-# first_taxon<-"Alistipes"
-# last_taxon <- "Ruminococcaceae_UCG014"
-# first_miRNA <- "mmu-miR-876-5p"; 
-# last_miRNA <- "mmu-miR-192-5p"
+first_taxon<-"Allobaculum"
+last_taxon <- "Lachnospiraceae_UCG006"
+first_miRNA <- "mmu-miR-100-5p";
+last_miRNA <- "mmu-miR-876-5p"
 
 ## Variables
 data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, first_taxon:last_taxon)%>%
@@ -364,7 +374,8 @@ dpi_q <- 200
 extension_img <- ".png"
 # suffix <- "testttttt"
 # microbio_set <- "sssss"
-ggsave (hm, file=paste0(out_dir, "heatmap_", microbio_set ,"_microbio_logTransform_", taxon, suffix, extension_img), 
+# microbio_set <- "Silvia_sign_"
+ggsave (hm, file=paste0(out_dir, "heatmap_", microbio_set ,"_microbio_logTransform_", "sel_miRNAs_", taxon, suffix, extension_img), 
         width = width_p, height = height_p, dpi=dpi_q)
 
 

@@ -3,7 +3,7 @@
 #############################################################################
 ### Jose Espinosa-Carrasco CB-CRG Group. Sep 2020                         ###
 #############################################################################
-### Cross-talking between behavior and microbiota                         ###
+### Cross-talking between behavior and miRNAs                             ###
 #############################################################################
 
 library(ggplot2)
@@ -24,15 +24,27 @@ transpose_df <- function(df) {
 }
 
 home_dir <- Sys.getenv("HOME")
-# Only behavioral variables used in PCA
-behavioral_data_path <- paste0(home_dir,
-                               "/git/food_addiction_analysis/data/microbiota/behavioral_data_from_results_microbiota_16_04_20_PCA_variables.csv")
+
+#########################################
+## Only behavioral variables used in PCA
+# behavioral_data_path <- paste0(home_dir,
+#                                "/git/food_addiction_analysis/data/microbiota/behavioral_data_from_results_microbiota_16_04_20_PCA_variables.csv")
+# behavioral_data <- read.csv(behavioral_data_path,
+#                             dec=",",
+#                             sep=";",
+#                             check.names = F,
+#                             stringsAsFactors = F)
+# first_var <-"Persistence_LP"; last_var <- "Aversive_LP"
+
+## Only PCA variables used by Alejandra
+behavioral_data_path <- paste0(home_dir, "/git/food_addiction_analysis/data/behavior/PCA_behavioral_data_fromMatrixAlejandra.csv")
 behavioral_data <- read.csv(behavioral_data_path,
                             dec=",",
                             sep=";",
                             check.names = F,
                             stringsAsFactors = F)
 # head(behavioral_data)
+first_var <-"Persistence_Index"; last_var <- "PFPeriod_First_5_min"
 
 # microRNAs data
 # discovery
@@ -72,23 +84,26 @@ miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
                                                      'mmu-miR-137-3p',
                                                      'mmu-miR-100-5p',
                                                      'mmu-miR-192-5p'))
-miRNAs_data_selected <-miRNAs_data
+# miRNAs_data_selected <-miRNAs_data
 miRNAs_behavioral_merged <- merge (miRNAs_data_selected, behavioral_data, by= "mouse_id")
 head(miRNAs_behavioral_merged)
 
 ## All miRNAs
-first_miRNA <- 'mmu-miR-34c-3p'; last_miRNA <- 'mmu-miR-7666-3p';
-axis_text_size<-24; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
-width_p <- 45; height_p <- 14
+# first_miRNA <- 'mmu-miR-34c-3p'; last_miRNA <- 'mmu-miR-7666-3p';
+# axis_text_size<-24; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
+# width_p <- 45; height_p <- 14
 
 ## Selected miRNAs
-# first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p'
-# axis_text_size<-16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
-# width_p <- 20; height_p <- 12
+first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p'
+axis_text_size<-16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
+width_p <- 20; height_p <- 12
 
+## My PCA var
+# data <- gather(miRNAs_behavioral_merged, miRNA, value, first_miRNA:last_miRNA)%>%
+#         gather(behavior_idx, index, Persistence_LP:Aversive_LP)
+## PCA var Alejandra
 data <- gather(miRNAs_behavioral_merged, miRNA, value, first_miRNA:last_miRNA)%>%
-        gather(behavior_idx, index, Persistence_LP:Aversive_LP)
-
+        gather(behavior_idx, index, first_var:last_var)
 data_nest <- group_by(data, miRNA, behavior_idx) %>% nest()
 
 # data_nest <- group_by(data, city, telecon) %>% nest()
@@ -108,6 +123,18 @@ data_nest
 
 corr_pr <- select(data_nest, -data) %>% unnest()
 corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
+
+###########
+## FDR
+# fdr_cutoff <- 0.2
+# test_p <- corr_pr$p.value
+# # class (corr_pr$p.value)
+# 
+# # test_p<-c(test_p,0.001459265)
+# # p.adjust(test_p, method = 'BH', n = length(test_p))
+# corr_pr$fdr <- p.adjust(corr_pr$p.value, method = 'BH', n = length(corr_pr$p.value))
+# corr_pr <- mutate(corr_pr, sig = ifelse(fdr < fdr_cutoff, "Sig.", "Non Sig."))
+# corr_pr$fdr
 
 hm <- ggplot() + geom_tile(data = corr_pr,
                            # aes(behavior_idx, miRNA, fill = estimate),
@@ -142,7 +169,8 @@ hm <- ggplot() + geom_tile(data = corr_pr,
             axis.text.x = element_text(angle=90),
             legend.text = element_text( size=14))
 
-out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_behavior_miRNAs/")
+# out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_behavior_miRNAs/")
+out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_behavior_miRNAs_selected/")
 dpi_q <- 200
 extension_img <- ".png"
 ggsave (hm, file=paste0(out_dir, "heatmap_fewVar_", microbio_set ,"_microbio_",

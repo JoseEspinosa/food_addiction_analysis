@@ -5,9 +5,9 @@
 ### Cross-talking between behavior and microbiota                         ###
 #############################################################################
 
-# library(ggplot2)
-# library(tidyverse)
-# library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
 
 ## Functions
 transpose_df <- function(df) {
@@ -87,20 +87,22 @@ miRNAs_data$mouse_id <- row.names(miRNAs_data)
 #################
 # Selected miRNAs
 ## Select miRNAs from Elena's table
-# miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
-#                                                      'mmu-miR-876-5p',
-#                                                      'mmu-miR-211-5p',
-#                                                      'mmu-miR-3085-3p',
-#                                                      'mmu-miR-665-3p',
-#                                                      'mmu-miR-3072-3p',
-#                                                      'mmu-miR-124-3p',
-#                                                      'mmu-miR-29c-3p',
-#                                                      'mmu-miR-544-3p',
-#                                                      'mmu-miR-137-3p',
-#                                                      'mmu-miR-100-5p',
-#                                                      'mmu-miR-192-5p'))
-# 
-# miRNAs_data <- miRNAs_data_selected
+miRNAs_data_selected <- subset(miRNAs_data, select=c('mouse_id',
+                                                     'mmu-miR-876-5p',
+                                                     'mmu-miR-211-5p',
+                                                     'mmu-miR-3085-3p',
+                                                     'mmu-miR-665-3p',
+                                                     'mmu-miR-3072-3p',
+                                                     'mmu-miR-124-3p',
+                                                     'mmu-miR-29c-3p',
+                                                     'mmu-miR-544-3p',
+                                                     'mmu-miR-137-3p',
+                                                     'mmu-miR-100-5p',
+                                                     'mmu-miR-192-5p'))
+
+miRNAs_data <- miRNAs_data_selected
+
+#move
 # first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p';
 # axis_text_size_x <- 16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
 # width_p <- 20; height_p <- 12
@@ -108,9 +110,9 @@ miRNAs_data$mouse_id <- row.names(miRNAs_data)
 
 #################
 # All miRNAs
-first_miRNA <- 'mmu-miR-34c-3p'; last_miRNA <- 'mmu-miR-7666-3p';
-axis_text_size_x <- 8; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
-width_p <- 45; height_p <- 14
+# first_miRNA <- 'mmu-miR-34c-3p'; last_miRNA <- 'mmu-miR-7666-3p';
+# axis_text_size_x <- 8; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
+# width_p <- 45; height_p <- 14
 ###############
 
 microbiota_relAbund <- subset(microbiota_by_taxon,

@@ -24,26 +24,28 @@ transpose_df <- function(df) {
 }
 
 ### microbiota data
-taxon <- "phylum"; sep_f=";"; first_taxon <- 'Verrucomicrobia'; last_taxon <- 'Actinobacteria'
+# taxon <- "phylum"; sep_f=";"; first_taxon <- 'Verrucomicrobia'; last_taxon <- 'Actinobacteria'
 # taxon <- "family"; sep_f=";"; first_taxon <- 'Alcaligenaceae';last_taxon <- 'Others'
-# taxon <- "genus"; sep_f=";"; first_taxon<-'Acetatifactor'; last_taxon<-'Tyzzerella';
+taxon <- "genus"; sep_f=";"; first_taxon<-'Acetatifactor'; last_taxon<-'Tyzzerella';
 
 
 home_dir <- Sys.getenv("HOME")
 rel_abundance_by_taxon <- paste0(home_dir, "/git/food_addiction_analysis/data/microbiota/relative_abundances_by_", taxon, ".csv")
-microbiota_by_phylum_ori <- read.csv(rel_abundance_by_taxon,
+microbiota_by_taxon_ori <- read.csv(rel_abundance_by_taxon,
                                      dec=",",
                                      sep=sep_f,
                                      check.names = F,
                                      stringsAsFactors = F)
 
-microbiota_by_phylum_tmp <- transpose_df(microbiota_by_phylum_ori)
+microbiota_by_taxon_tmp <- transpose_df(microbiota_by_taxon_ori)
 
-write.csv(microbiota_by_phylum_tmp, paste0(home_dir, "/tmp.csv"))
-microbiota_by_phylum <- read.csv(paste0(home_dir, "/tmp.csv"),
+write.csv(microbiota_by_taxon_tmp, paste0(home_dir, "/tmp.csv"))
+microbiota_by_taxon <- read.csv(paste0(home_dir, "/tmp.csv"),
                                  dec=",",
                                  check.names = F,
                                  stringsAsFactors = F)
+## Only addicts
+microbiota_by_taxon <-subset(microbiota_by_taxon, Grouping=="Addict")
 
 ## Behavioral data all variables
 # behavioral_data_path <- paste0(home_dir,
@@ -60,10 +62,10 @@ behavioral_data <- read.csv(behavioral_data_path,
 
 ####################################
 ## Only dataframe selected columns
-# head(microbiota_by_phylum)
+# head(microbiota_by_taxon)
 # head(behavioral_data)
-# microbiota_relAbund <- subset(microbiota_by_phylum, select=-c(Grouping))
-microbiota_relAbund <- subset(microbiota_by_phylum)
+# microbiota_relAbund <- subset(microbiota_by_taxon, select=-c(Grouping))
+microbiota_relAbund <- subset(microbiota_by_taxon)
 # behavioral_cont_data <- behavioral_data
 behavioral_cont_data <- subset (behavioral_data,
                                 select=-c(diet_group_ireland, Addiction_categorization_LP))
@@ -74,6 +76,8 @@ microbio_behavioral_merged <- subset (microbio_behavioral_merged,select=-c(Var.2
 ## taxa
 data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, first_taxon:last_taxon)%>%
                gather(behavior_idx, index, Persistence_EP:Acquisition_stability)
+microbio_behavioral_merged[,c("Pellets_shock_LP")]
+
 ## family
 # data <- gather(microbio_behavioral_merged, taxon, microbio_rel_ab, Alcaligenaceae:Others)%>%
 #                gather(behavior_idx, index, Persistence_EP:Acquisition_stability)
