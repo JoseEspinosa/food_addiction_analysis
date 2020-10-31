@@ -94,14 +94,14 @@ miRNAs_behavioral_merged <- merge (miRNAs_data_selected, behavioral_data, by= "m
 # head(miRNAs_behavioral_merged)
 
 ## All miRNAs
-# first_miRNA <- 'bta-miR-2478'; last_miRNA <- 'xtr-miR-9b-5p';
-# axis_text_size<-24; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
-# width_p <- 45; height_p <- 14
+first_miRNA <- 'bta-miR-2478'; last_miRNA <- 'xtr-miR-9b-5p';
+axis_text_size<-24; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
+width_p <- 45; height_p <- 14
 
 ## Selected miRNAs
-first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p'
-axis_text_size<-16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
-width_p <- 20; height_p <- 12
+# first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p'
+# axis_text_size<-16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
+# width_p <- 20; height_p <- 12
 
 ## My PCA var
 # data <- gather(miRNAs_behavioral_merged, miRNA, value, first_miRNA:last_miRNA)%>%
@@ -122,6 +122,7 @@ library(broom) # Convert results of statistical functions (lm, t.test, cor.test,
 # library(lubridate)
 
 data_nest <- mutate(data_nest, model = map(data, cor_fun))
+
 data_nest
 
 # str(slice(data_nest, 1))
@@ -131,15 +132,15 @@ corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
 
 ###########
 ## FDR
-# fdr_cutoff <- 0.2
-# test_p <- corr_pr$p.value
-# # class (corr_pr$p.value)
-# 
-# # test_p<-c(test_p,0.001459265)
-# # p.adjust(test_p, method = 'BH', n = length(test_p))
-# corr_pr$fdr <- p.adjust(corr_pr$p.value, method = 'BH', n = length(corr_pr$p.value))
-# corr_pr <- mutate(corr_pr, sig = ifelse(fdr < fdr_cutoff, "Sig.", "Non Sig."))
-# corr_pr$fdr
+fdr_cutoff <- 0.2
+test_p <- corr_pr$p.value
+# class (corr_pr$p.value)
+
+# test_p<-c(test_p,0.001459265)
+p.adjust(test_p, method = 'BH', n = length(test_p))
+corr_pr$fdr <- p.adjust(corr_pr$p.value, method = 'BH', n = length(corr_pr$p.value))
+corr_pr <- mutate(corr_pr, sig = ifelse(fdr < fdr_cutoff, "Sig.", "Non Sig."))
+corr_pr$fdr
 
 hm <- ggplot() + geom_tile(data = corr_pr,
                            # aes(behavior_idx, miRNA, fill = estimate),
@@ -174,11 +175,12 @@ hm <- ggplot() + geom_tile(data = corr_pr,
             axis.text.x = element_text(angle=90),
             legend.text = element_text( size=14))
 
+hm
 # out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_behavior_miRNAs/")
 out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_behavior_miRNAs_selected/")
 dpi_q <- 200
 extension_img <- ".png"
-ggsave (hm, file=paste0(out_dir, "heatmap_fewVar_", microbio_set ,"_microbio_",
+ggsave (hm, file=paste0(out_dir, "heatmap_fewVar_", microbio_set ,
                         "miRNAs", extension_img), 
         width=width_p, height = height_p, dpi=dpi_q)
 
