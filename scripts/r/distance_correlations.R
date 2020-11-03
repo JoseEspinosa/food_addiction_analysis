@@ -25,7 +25,7 @@ mb=read.table(bf,header=TRUE,sep="\t",row.names=1)
 mb_t <- t(mb)
 
 ## reorder to match microbiome columns (mice)
-col_names_microb <- colnames(m)
+col_names_microb <- colnames(m_microbiome)
 mb_t_ord <- mb_t [, col_names_microb]
 cor_m_beh <- cor(mb_t_ord, method="pearson")
 dist_m_beh <- 1 - cor_m_beh
