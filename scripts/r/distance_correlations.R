@@ -37,8 +37,7 @@ str(dist_m_beh)
 str(dist_m_microbiome)
 
 cor(c(dist_m_beh), c(dist_m_beh))
-cor(c(dist_m_beh), c(dist_m_microbiome), method="pearson")
-
+cor_distance_beh_microb = cor(c(dist_m_beh), c(dist_m_microbiome), method="pearson")
 
 #########################################
 # Filter microbiome abundances like Ionas
@@ -56,34 +55,9 @@ cor_m_microbiome_filt <- cor(mb_t_f_ord, method="pearson")
 cor_m_microbiome_filt
 dist_m_microbiome_filt <- 1-cor_m_microbiome_filt
 
-cor(c(dist_m_beh), c(dist_m_microbiome_filt), method="pearson")
-length(c(dist_m_beh))
-length(c(dist_m_microbiome_filt))
-colnames (dist_m_beh)
-colnames (dist_m_microbiome_filt)
+cor_distance_beh_microb_filt = cor(c(dist_m_beh), c(dist_m_microbiome_filt), method="pearson")
 
 
 
-
-
-# install.packages("tidyverse")
-library(tidyverse)
-
-# install.packages("corrr")
-library(corrr)
-
-m %>%
-corrr::correlate() %>%
-  corrr::focus(mpg:hp, mirror = TRUE) %>%
-  # converts the upper triangle (default) to missing values
-  corrr::shave() %>%
-  # converts a correlation df into clean matrix
-  corrr::fashion()
-
-
-M=t(m)
-rownames(M)=ma[1,]
-
-gr=as.character(ma[2,])
 
 
