@@ -1,3 +1,9 @@
+#############################################################################
+### Jose Espinosa-Carrasco CB-CRG Group. Nov 2020                         ###
+#############################################################################
+### Cross-talking between behavior and microbiome                         ###
+#############################################################################
+
 # Loading functions:
 source ("./scripts/r/graph_parameters.R")
 
@@ -124,6 +130,8 @@ title_2_plot = "PCA"
 list_var <- list()
 list_var <- get_var_pcs(res)
 
+get_var_pcs(res)
+res$var
 pca_addiction_PC1_PC2 <- pca_plot (res, pc_x="Dim.1", pc_y="Dim.2", group_v=group_v, 
                                    title_pca=title_2_plot, id_v = sample_id,
                                    list_variance = list_var)
@@ -228,5 +236,127 @@ width_p <- 20; height_p <- 14
 ggsave (hm, file=paste0(out_dir, "heatmap_", "filtered_microbio_transf_", taxon, "_pcaVars", extension_img), 
         width = width_p, height = height_p, dpi=dpi_q)
 
+######################
+## microRNA data:
+miRNAs_1 <- paste0(home_dir, "/git/food_addiction_analysis/forJose/miRNAs_1.txt")
+miRNAs_2 <- paste0(home_dir, "/git/food_addiction_analysis/forJose/miRNAs_2.txt")
 
-               
+l1 = read.table(miRNAs_1, header=FALSE, row.names=1, colClasses = "character")
+l2 = read.table(miRNAs_2, header=FALSE, row.names=1, colClasses = "character")
+
+mi1=read.table(miRNAs_1, skip=1, row.names=1)
+mi2=read.table(miRNAs_2, header=TRUE, row.names=1)
+
+colnames(mi1)=l1[1,]
+colnames(mi2)=l2[1,]
+smi1 = mi1[rownames(mi2),]
+mi = cbind(smi1,mi2)
+
+#we miss some control mice that are in the microbiome data:
+M3 = M_f[intersect(colnames(mi),rownames(M_f)),]
+MI = t(mi[,intersect(colnames(mi), rownames(M_f))])
+
+test = apply(MI,2,min)
+MI2 = MI[,which(test>0)]
+
+miRNA_to_transf <- t(MI2)
+miRNA_clr <- as.data.frame(t(microbiome::transform(miRNA_to_transf, "clr")))
+miRNA_clr$mouse_id <- row.names(miRNA_clr)
+
+## Select miRNAs from Elena's table
+# miRNAs_data_selected <- subset(miRNA_clr, select=c('mouse_id',
+#                                                      'mmu-miR-876-5p',
+#                                                      'mmu-miR-211-5p',
+#                                                      'mmu-miR-3085-3p',
+#                                                      'mmu-miR-665-3p',
+#                                                      'mmu-miR-3072-3p',
+#                                                      'mmu-miR-124-3p',
+#                                                      'mmu-miR-29c-3p',
+#                                                      'mmu-miR-544-3p',
+#                                                      'mmu-miR-137-3p',
+#                                                      'mmu-miR-100-5p',
+#                                                      'mmu-miR-192-5p'))
+# 
+# miRNA_clr <- miRNAs_data_selected
+
+## Merge tables
+pca_miRNA_merged <- merge (miRNA_clr, pca_dim, by= "mouse_id")
+colnames(pca_miRNA_merged)[2]
+
+# All miRNAs
+# first_miRNA <- 'mmu-miR-764-3p'; last_miRNA <- 'mmu-miR-26b-5p';
+# axis_text_size_x <- 8; size_p_values <- 4; angle_reg<-270; microbio_set <- "zero_filt"
+# width_p <- 45; height_p <- 14
+
+# Selected miRNAs
+first_miRNA <- 'mmu-miR-876-5p'; last_miRNA <- 'mmu-miR-192-5p';
+axis_text_size_x <- 16; size_p_values <- 5; angle_reg <- 0; microbio_set <- "selected"
+width_p <- 20; height_p <- 12
+
+## Gather
+data <- gather(pca_miRNA_merged, miRNA, value, first_miRNA:last_miRNA)%>%
+        gather(pca_dim, pca_coord, Dim.1:Dim.7)
+        
+data_nest <- group_by(data, miRNA, pca_dim) %>% nest()
+
+# cor_method <- "pearson"
+cor_method <- "spearman"
+cor_fun <- function(df) cor.test(df$value, df$pca_coord, method = cor_method) %>% tidy()
+
+library(broom) # Convert results of statistical functions (lm, t.test, cor.test, etc.) into tidy tables
+
+data_nest <- mutate(data_nest, model = map(data, cor_fun))
+
+corr_pr <- select(data_nest, -data) %>% unnest()
+corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
+
+## Plot
+title_p <- paste("Correlations between PCA vars and miRNAS",
+                 "filtered zeros, transformed\n")
+# title_p <- paste("Correlations between PCA vars and selected miRNAS", 
+#                  " transformed\n")
+
+# axis_text_size_x<-18
+# axis_text_size_y <- 14
+hm <- ggplot() + geom_tile(data = corr_pr,
+                           aes(pca_dim, miRNA, fill = estimate),
+                           size = 1,
+                           colour = "white") +
+  ## black lines around tiles
+  geom_tile(data = filter(corr_pr, sig == "Sig."),
+            aes(pca_dim, miRNA),
+            size = 1,
+            colour = "black",
+            fill = "transparent") +
+  scale_fill_gradient2(breaks = seq(-1, 1, 0.2), #midpoint = mid, 
+                       low = "#d53e4f", mid = "white",
+                       high = "#abdda4") + 
+  labs(y = "", x = "", fill = "", p.value = "", title = title_p) +
+  theme_minimal()+
+  theme(panel.grid.major = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(size=axis_text_size_x, angle=90),
+        axis.text.y = element_text(size=axis_text_size_y),
+        plot.title = element_text(size=24, hjust = 0.5),
+        legend.text = element_text( size=14))
+hm
+
+out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/pca_sel_behavior/")
+dpi_q <- 200
+extension_img <- ".png"
+
+
+# All miRNAs
+axis_text_size_x <- 8; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
+width_p <- 45; height_p <- 30
+
+# width_p <- 20; height_p <- 14
+ggsave (hm, file=paste0(out_dir, "heatmap_", "filtered_miRNA_transf_", "_pcaVars", extension_img),
+        width = width_p, height = height_p, dpi=dpi_q)
+
+## selected miRNAs
+# ggsave (hm, file=paste0(out_dir, "heatmap_", "filtered_miRNA_selected_", "pcaVars", extension_img), 
+        # width = width_p, height = height_p, dpi=dpi_q)
+
