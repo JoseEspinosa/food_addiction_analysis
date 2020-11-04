@@ -393,7 +393,7 @@ clr(bottle.df[1,],"Number")
 ## Checking that the transform gives the same result
 ## To be sure two thinks are important:
 ## 1 - microbiome::transform directly puts pseudocounts so we need to control by first
-## substituting zeros as in hotelling
+## substituting zeros as in hotelling so that the same pseudocounts are used
 ## 2- microbiome samples (mouse) should be in the columns for microbiome::transform
 ## and in rows for hotelling:clr
 tr_microbiome <- microbiome::transform(microbiota_by_taxon_int [,-1], "clr")

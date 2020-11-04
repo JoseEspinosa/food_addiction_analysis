@@ -27,6 +27,11 @@ get_var_pcs <- function (pca_r) {
   return (list_v)
 }
 
+first_up <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
+
 pca_plot <- function (pca_r, pc_x="Dim.1", pc_y="Dim.2", id_v=NA, group_v=NA, title_pca="", 
                       min_x=NA, max_x=NA, min_y=NA, max_y=NA, list_variance=NA) {
   
@@ -95,6 +100,7 @@ pca_plot <- function (pca_r, pc_x="Dim.1", pc_y="Dim.2", id_v=NA, group_v=NA, ti
 }
 
 library(FactoMineR)
+home_dir <- Sys.getenv("HOME")
 
 ##############
 ## Behavior
@@ -103,7 +109,6 @@ mb=read.table(bf,header=TRUE,sep="\t",row.names=1)
 mb
 res = PCA (mb, scale.unit=TRUE, ncp=7)
 
-home_dir <- Sys.getenv("HOME")
 taxon <- "genus"
 ra <- paste0(home_dir, "/git/food_addiction_analysis/forJose/relative_abundances_by_", taxon, ".txt")
 ma <- read.table(ra, sep="\t", skip=1,
@@ -126,6 +131,102 @@ pca_addiction_PC1_PC2 <- pca_plot (res, pc_x="Dim.1", pc_y="Dim.2", group_v=grou
 pca_dim <- as.data.frame (res$ind$coord)
 pca_dim$mouse_id <- row.names(pca_dim)
 
+### Microbiome data
+taxon <- "genus"
+ra <- paste0(home_dir, "/git/food_addiction_analysis/forJose/relative_abundances_by_", taxon, ".txt")
+ma <- read.table(ra, sep="\t", skip=1,
+                 row.names=1, colClasses = "character")
+
+m_microbiome=read.table(ra,sep="\t",skip=3,row.names=1)
+colnames(m_microbiome)=ma[1,]
+
+###################################
+## Filter zero values
+M=t(m_microbiome)
+rownames(M)=ma[1,]
+
+# ## Any genera with zeros is removed i.e. any row with a zero
+test=apply(M,2,min)
+## test
+M_f = M[,-which(test==0)]
+m_microbiome_f <- t(M_f) 
+
+first_taxon<-'Alistipes'; last_taxon<-'Tyzzerella';
+m_microbiome_to_clr <- m_microbiome_f
+
+## all genera
+# first_taxon<-'Acetatifactor'; last_taxon<-'Tyzzerella';
+# m_microbiome_to_clr <- m_microbiome
+
+###################################
+## Transform microbiome data
+## microbiome samples (mouse) should be in the columns for microbiome::transform
+microbiome_clr <- microbiome::transform(m_microbiome_to_clr, "clr")
+
+#######
+# merging tables
+microbiome_clr_df <- as.data.frame(t(microbiome_clr))
+microbiome_df <- microbiome_clr_df
+
+microbiome_df$mouse_id <- rownames(microbiome_df)
+
+pca_microbiome_merged <- merge (microbiome_df, pca_dim, by= "mouse_id")
+
+## Merge tables
+data <- gather(pca_microbiome_merged, taxon, microbio_rel_ab, first_taxon:last_taxon)%>%
+        gather(pca_dim, value, Dim.1:Dim.7)
+
+data_nest <- group_by(data, taxon, pca_dim) %>% nest()
+
+# cor_method <- "pearson"
+cor_method <- "spearman"
+cor_fun <- function(df) cor.test(df$microbio_rel_ab, df$value, method = cor_method) %>% tidy()
+
+library(broom) # Convert results of statistical functions (lm, t.test, cor.test, etc.) into tidy tables
+
+data_nest <- mutate(data_nest, model = map(data, cor_fun))
+
+corr_pr <- select(data_nest, -data) %>% unnest()
+corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
+
+## Plot
+title_p <- paste("Correlations between PCA vars and", 
+                 first_up(taxon), "filtered zeros, transformed ","relative abundances\n")
+
+axis_text_size_x<-18
+axis_text_size_y <- 14
+hm <- ggplot() + geom_tile(data = corr_pr,
+                           # aes(taxon, miRNA, fill = estimate),
+                           aes(pca_dim, taxon, fill = estimate),
+                           size = 1,
+                           colour = "white") +
+  ## black lines around tiles
+  geom_tile(data = filter(corr_pr, sig == "Sig."),
+            aes(pca_dim, taxon),
+            size = 1,
+            colour = "black",
+            fill = "transparent") +
+  scale_fill_gradient2(breaks = seq(-1, 1, 0.2), #midpoint = mid, 
+                       low = "#d53e4f", mid = "white",
+                       high = "#abdda4") + 
+  labs(y = "", x = "", fill = "", p.value = "", title = title_p) +
+  theme_minimal()+
+  theme(panel.grid.major = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(size=axis_text_size_x, angle=90),
+        axis.text.y = element_text(size=axis_text_size_y),
+        plot.title = element_text(size=24, hjust = 0.5),
+        legend.text = element_text( size=14))
+hm
+
+out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/pca_sel_behavior/")
+dpi_q <- 200
+extension_img <- ".png"
+width_p <- 20; height_p <- 14
+ggsave (hm, file=paste0(out_dir, "heatmap_", "filtered_microbio_transf_", taxon, "_pcaVars", extension_img), 
+        width = width_p, height = height_p, dpi=dpi_q)
 
 
                
