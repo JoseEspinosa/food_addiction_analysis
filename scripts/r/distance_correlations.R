@@ -15,8 +15,7 @@ m_microbiome=read.table(ra,sep="\t",skip=3,row.names=1)
 colnames(m_microbiome)=ma[1,]
 
 cor_m_microbiome <- cor(m_microbiome, method="pearson")
-cor_m
-dist_m_microbiome <- 1-cor_m
+dist_m_microbiome <- 1-cor_m_microbiome
 
 ##############
 ## Behavior
@@ -35,7 +34,7 @@ colnames (dist_m_microbiome)
 
 str(dist_m_beh)
 str(dist_m_microbiome)
-
+plot(c(dist_m_beh), c(dist_m_microbiome))
 cor(c(dist_m_beh), c(dist_m_beh))
 cor_distance_beh_microb = cor(c(dist_m_beh), c(dist_m_microbiome), method="pearson")
 
