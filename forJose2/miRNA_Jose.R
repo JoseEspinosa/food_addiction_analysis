@@ -103,15 +103,15 @@ legend("topleft",c("addicted","control"),col=c("red","green"),pch=c("B","B"),cex
 dev.off()
 
 ## mmu-miR-29c-3p
-cp=rda(Mb,Mi[,"mmu-miR-29c-3p"])
+cp_29=rda(Mb,Mi[,"mmu-miR-29c-3p"])
 
-cp$CCA$eig/(cp$CCA$eig+sum(cp$CA$eig))
-cp$CA$eig[1]/(cp$CCA$eig+sum(cp$CA$eig))
+cp_29$CCA$eig/(cp_29$CCA$eig+sum(cp_29$CA$eig))
+cp_29$CA$eig[1]/(cp_29$CCA$eig+sum(cp_29$CA$eig))
 
 png("../figures/RDAmiRNA.png",width=12,height=12,unit="cm",res=300)
-plot(c(cp$CCA$u,cp$CCA$v),c(cp$CA$u[,1],cp$CA$v[,1]),type="n",main="Constrained PCA miRNA",xlab="RDA1 (mmu-miR-665-3p), 29.1%",ylab="PC1, 39.3%")
-text(cp$CCA$v,cp$CA$v[,1],colnames(Mb),cex=0.5,col="grey")
-text(cp$CCA$u,cp$CA$u[,1],rownames(Mb),col=col+1,cex=0.7)
+plot(c(cp_29$CCA$u,cp_29$CCA$v),c(cp_29$CA$u[,1],cp_29$CA$v[,1]),type="n",main="Constrained PCA miRNA",xlab="RDA1 (mmu-miR-29c-3p), 18.4%",ylab="PC1, 49.4%")
+text(cp_29$CCA$v,cp_29$CA$v[,1],colnames(Mb),cex=0.5,col="grey")
+text(cp_29$CCA$u,cp_29$CA$u[,1],rownames(Mb),col=col+1,cex=0.7)
 legend("topleft",c("addicted","control"),col=c("red","green"),pch=c("B","B"),cex=0.7)
 dev.off()
 
@@ -142,10 +142,6 @@ intersect(names(mymi),names(spe)[order(spe,decreasing=TRUE)[1:10]])
 spe[order(spe,decreasing=TRUE)]
 spe[order(spe,decreasing=TRUE)]['mmu-miR-29c-3p']
 
-## Obtain index of the column
-grep('mmu-miR-29c-3p', colnames(Mi))
-colnames(Mi)[55]
-
 #this one is also decent (ranked 11):
 spe["mmu-miR-665-3p"]
 # mmu-miR-665-3p 
@@ -154,7 +150,19 @@ spe["mmu-miR-665-3p"]
 #the three have "significant" rank correlation with our ratio
 # (but wouldn't survive full multiple testing correction)
 cor.test(log(Mi[,29]),log(Mm[,10]/Mm[,53]),method="spearman")
-p-value = 0.04985
+cor_665 = cor.test(log(Mi[,29]),log(Mm[,10]/Mm[,53]),method="spearman")
+# p-value = 0.04985
+cor_665$estimate
+# rho = 0.4466165
+
+## Obtain index of the column
+grep('mmu-miR-29c-3p', colnames(Mi))
+colnames(Mi)[55]
+cor.test(log(Mi[,55]),log(Mm[,10]/Mm[,53]), method="spearman")
+cor_29c = cor.test(log(Mi[,55]),log(Mm[,10]/Mm[,53]), method="spearman")
+# p-value = 0.40
+cor_29c$estimate
+# rho = 0.1954887
 
 png("../figures/corrMratioVmiRNA.png",width=12,height=12,unit="cm",res=300)
 plot((Mi[,"mmu-miR-665-3p"]),(Mm[,10]/Mm[,53]),type="n",main="Microbiota ratio vs miRNA",xlab="mmu-miR-665-3p abundance",ylab="Muribaculaceae/Prevotellaceae",log="xy")
@@ -174,14 +182,16 @@ vioplot(M[which(gr=="Addict"),10]/M[which(gr=="Addict"),53],M[which(gr=="Non-Add
 plot(log(Mi[,"mmu-miR-665-3p"]),log(Mm[,10]/Mm[,53]),type="n",main="Microbiota ratio vs miRNA",xlab="log(mmu-miR-665-3p abundance)",ylab="log(Muribaculaceae/Prevotellaceae)")
 points(log(Mi[,"mmu-miR-665-3p"]),log(Mm[,10]/Mm[,53]),col=col+1,pch=19)
 legend("topleft",c("control","addicted"),col=c("green","red"),pch=19)
+text(6,4.2, paste0("rho=", round(cor_665$estimate,3)),  cex=0.8)
+text(6,3.9, paste0("pvalue=", round(cor_665$p.value,4)),  cex=0.8)
 abline(res)
 
 plot(c(cpc$CCA$u,cpc$CCA$v),c(cpc$CA$u[,1],cpc$CA$v[,1]),type="n",main="Constrained PCA microbiota ratio",xlab="RDA1 (log(Muribaculaceae/Prevotellaceae)), 24.6%",ylab="PC1, 42.6%")
-text(cpc$CCA$v,cpc$CA$v[,1],colnames(MB),cex=0.5)
+text(cpc$CCA$v,cpc$CA$v[,1],colnames(MB),cex=0.7)
 text(cpc$CCA$u,cpc$CA$u[,1],rownames(MB),col=c(rep(3,11),rep(2,13)),cex=0.7,pch=20)
 
 plot(c(cp$CCA$u,cp$CCA$v),c(cp$CA$u[,1],cp$CA$v[,1]),type="n",main="Constrained PCA miRNA",xlab="RDA1 (mmu-miR-665-3p), 29.1%",ylab="PC1, 39.3%")
-text(cp$CCA$v,cp$CA$v[,1],colnames(Mb),cex=0.5)
+text(cp$CCA$v,cp$CA$v[,1],colnames(Mb),cex=0.7)
 text(cp$CCA$u,cp$CA$u[,1],rownames(Mb),col=col+1,cex=0.7,pch=20)
 
 dev.off()
@@ -193,20 +203,43 @@ res2=lm(log(Mm[,10]/Mm[,53])~log(Mi[,"mmu-miR-29c-3p"]))
 png("../figures/panels_29c.png",width=25,height=25,unit="cm",res=300)
 par(mfrow=c(2,2))
 
-vioplot(M[which(gr=="Addict"),10]/M[which(gr=="Addict"),53],M[which(gr=="Non-Addict"),10]/M[which(gr=="Non-Addict"),53],col=c("red","green"),ylog=TRUE,ylab="Muribaculaceae/Prevotellaceae",names=c("addicted","control"),main="Microbiota ratio in groups")
+vioplot(M[which(gr=="Addict"),10]/M[which(gr=="Addict"),53],
+        M[which(gr=="Non-Addict"),10]/M[which(gr=="Non-Addict"),53],
+        # cex.lab=2,
+        cex.names=1,
+        # cex.axis=1.2, 
+        cex.main=1.2,
+        col=c("red","green"),
+        ylog=TRUE, ylab="Muribaculaceae/Prevotellaceae",
+        names=c("Addicted","Control"),
+        main="Microbiota ratio in groups")
 
-plot(log(Mi[,"mmu-miR-29c-3p"]),log(Mm[,10]/Mm[,53]),type="n",main="Microbiota ratio vs miRNA",xlab="log(mmu-miR-665-3p abundance)",ylab="log(Muribaculaceae/Prevotellaceae)")
-points(log(Mi[,"mmu-miR-29c-3p"]),log(Mm[,10]/Mm[,53]),col=col+1,pch=19)
-legend("topleft",c("control","addicted"),col=c("green","red"),pch=19)
+plot(log(Mi[,"mmu-miR-29c-3p"]),
+     log(Mm[,10]/Mm[,53]),type="n",
+     main="Microbiota ratio vs miRNA",
+     xlab="log(mmu-miR-29c-3p abundance)",
+     ylab="log(Muribaculaceae/Prevotellaceae)")
+points(log(Mi[,"mmu-miR-29c-3p"]),log(Mm[,10]/Mm[,53]),col=col+1, pch=19)
+text(bip$sites[,1],bip$sites[,2],rownames(Mb),col=col+1,cex=0.7)
+legend("topleft",c("control","addicted"),col=c("green","red"), pch=19)
+# text(bip$sites[,1],bip$sites[,2], rownames(Mb), col=col+1, cex=0.7)
+text(8.45,4, paste0("rho=", round(cor_29c$estimate,3)),  cex=0.8)
+text(8.45,3.4, paste0("pvalue=", round(cor_29c$p.value,3)),  cex=0.8)
 abline(res2)
 
-plot(c(cpc$CCA$u,cpc$CCA$v),c(cpc$CA$u[,1],cpc$CA$v[,1]),type="n",main="Constrained PCA microbiota ratio",xlab="RDA1 (log(Muribaculaceae/Prevotellaceae)), 24.6%",ylab="PC1, 42.6%")
-text(cpc$CCA$v,cpc$CA$v[,1],colnames(MB),cex=0.5)
+plot(c(cpc$CCA$u,cpc$CCA$v),
+     c(cpc$CA$u[,1],cpc$CA$v[,1]),
+     type="n",main="Constrained PCA microbiota ratio",
+     xlab="RDA1 (log(Muribaculaceae/Prevotellaceae)), 24.6%",ylab="PC1, 42.6%")
+text(cpc$CCA$v,cpc$CA$v[,1],colnames(MB),cex=0.7)
 text(cpc$CCA$u,cpc$CA$u[,1],rownames(MB),col=c(rep(3,11),rep(2,13)),cex=0.7,pch=20)
 
-plot(c(cp$CCA$u,cp$CCA$v),c(cp$CA$u[,1],cp$CA$v[,1]),type="n",main="Constrained PCA miRNA",xlab="RDA1 (mmu-miR-665-3p), 29.1%",ylab="PC1, 39.3%")
-text(cp$CCA$v,cp$CA$v[,1],colnames(Mb),cex=0.5)
-text(cp$CCA$u,cp$CA$u[,1],rownames(Mb),col=col+1,cex=0.7,pch=20)
+plot(c(cp_29$CCA$u, cp_29$CCA$v), c(cp_29$CA$u[,1],cp_29$CA$v[,1]),type="n",
+     main="Constrained PCA miRNA",
+     xlab="RDA1 (mmu-miR-29c-3p), 18.4%",
+     ylab="PC1, 49.4%")
+text(cp_29$CCA$v,cp_29$CA$v[,1],colnames(Mb),cex=0.7)
+text(cp_29$CCA$u,cp_29$CA$u[,1],rownames(Mb),col=col+1,cex=0.7,pch=20)
 
 dev.off()
 
@@ -229,3 +262,35 @@ arrows(0,0,bip$biplot[,1]*attr(bip$biplot,"arrow.mul"),bip$biplot[,2]*attr(bip$b
 text(bip$biplot[,1]*attr(bip$biplot,"arrow.mul"),bip$biplot[,2]*attr(bip$biplot,"arrow.mul"),colnames(cons),pos=3,cex=0.7)
 dev.off()
 
+## regression only addicts
+plot(log(Mi[,"mmu-miR-665-3p"]),log(Mm[,10]/Mm[,53]),type="n",main="Microbiota ratio vs miRNA",xlab="log(mmu-miR-665-3p abundance)",ylab="log(Muribaculaceae/Prevotellaceae)")
+points(log(Mi[,"mmu-miR-665-3p"]),log(Mm[,10]/Mm[,53]),col=col+1,pch=19)
+legend("topleft",c("control","addicted"),col=c("green","red"),pch=19)
+abline(res)
+
+cor.test(log(Mi[,29]),log(Mm[,10]/Mm[,53]),method="spearman")
+cor_665 = cor.test(log(Mi[,29]),log(Mm[,10]/Mm[,53]),method="spearman")
+# p-value = 0.04985
+cor_665$estimate
+# rho = 0.4466165
+rownames(Mi)
+length(Mi[,1])
+
+group = c(1:20)
+group[which(gr2=="Non-Addict")] = "Non-Addict"
+group[which(gr2=="Addict")] = "Addict"
+
+df_miRNAs <- cbind(log(Mi[,29]), log(Mi[,55]), log(Mm[,10]/Mm[,53]))
+df_miRNAs <- as.data.frame(df_miRNAs)
+colnames(df_miRNAs) <- c("miR-665-3p", "miR-29c-3p", "ratio")
+df_miRNAs$group <- group
+
+df_miRNAs_addicts <- subset (df_miRNAs, group=="Addict")
+cor.test(df_miRNAs_addicts$`miR-29c-3p`, df_miRNAs_addicts$ratio, method = 'spearman')
+
+res3=lm(df_miRNAs_addicts$ratio~df_miRNAs_addicts$`miR-29c-3p`)
+
+plot(df_miRNAs_addicts$`miR-29c-3p`, df_miRNAs_addicts$ratio, type="n",main="Microbiota ratio vs miRNA",xlab="log(mmu-miR-29c-3p abundance)",ylab="log(Muribaculaceae/Prevotellaceae)")
+points(df_miRNAs_addicts$`miR-29c-3p`,df_miRNAs_addicts$ratio,col="red",pch=19)
+legend("topleft",c("addicted"),col=c("red"),pch=19)
+abline(res3)
