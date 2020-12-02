@@ -135,6 +135,9 @@ res$var
 pca_addiction_PC1_PC2 <- pca_plot (res, pc_x="Dim.1", pc_y="Dim.2", group_v=group_v, 
                                    title_pca=title_2_plot, id_v = sample_id,
                                    list_variance = list_var)
+pca_addiction_PC1_PC4 <- pca_plot (res, pc_x="Dim.1", pc_y="Dim.4", group_v=group_v, 
+                                   title_pca=title_2_plot, id_v = sample_id,
+                                   list_variance = list_var)
 
 pca_dim <- as.data.frame (res$ind$coord)
 pca_dim$mouse_id <- row.names(pca_dim)
@@ -316,6 +319,18 @@ title_p <- paste("Correlations between PCA vars and miRNAS",
 # title_p <- paste("Correlations between PCA vars and selected miRNAS", 
 #                  " transformed\n")
 
+###########
+## FDR
+fdr_cutoff <- 0.2
+test_p <- corr_pr$p.value
+# class (corr_pr$p.value)
+
+# test_p<-c(test_p,0.001459265)
+# p.adjust(test_p, method = 'BH', n = length(test_p))
+# corr_pr$fdr <- p.adjust(corr_pr$p.value, method = 'BH', n = length(corr_pr$p.value))
+# corr_pr <- mutate(corr_pr, sig = ifelse(fdr < fdr_cutoff, "Sig.", "Non Sig."))
+# corr_pr$fdr
+
 # axis_text_size_x<-18
 # axis_text_size_y <- 14
 hm <- ggplot() + geom_tile(data = corr_pr,
@@ -360,3 +375,38 @@ ggsave (hm, file=paste0(out_dir, "heatmap_", "filtered_miRNA_transf_", "_pcaVars
 # ggsave (hm, file=paste0(out_dir, "heatmap_", "filtered_miRNA_selected_", "pcaVars", extension_img), 
         # width = width_p, height = height_p, dpi=dpi_q)
 
+############
+## BARPLOT
+pca_barPlot <- function (pca_coord="", sel_pc="Dim.1") {
+  
+  df.bars <- cbind (as.numeric(sort(pca_coord[ ,sel_pc ]^2/sum(pca_coord[,sel_pc ]^2)*100,decreasing=TRUE)), 
+                    names(pca_coord[ ,sel_pc ])[order(pca_coord[ ,sel_pc ]^2,decreasing=TRUE)])
+  df.bars_to_plot <- as.data.frame (df.bars)
+  df.bars_to_plot$index <- as.factor (df.bars_to_plot$V2)
+  df.bars_to_plot$value <- as.numeric(sort(res$var$coord[ ,sel_pc ]^2/sum(res$var$coord[ ,sel_pc ]^2)*100,decreasing=TRUE))
+  df.bars_to_plot$index <- factor(df.bars_to_plot$index, levels = df.bars_to_plot$index[order(df.bars_to_plot$value, decreasing=TRUE)])
+  
+  # Filtering only the top contributors more than 2 %
+  threshold <- 2
+  df.bars_to_plot <- df.bars_to_plot [df.bars_to_plot$value > threshold, ]
+  
+  label_pc <- label_pc (sel_pc)
+  
+  title_bars <- paste ("Variable contribution to ", label_pc, "\n", sep="")
+  max_y <- ceiling(max(df.bars_to_plot$value) * 1.20)
+  # print (df.bars_to_plot)
+  bars_plot <- ggplot (data=df.bars_to_plot, aes(x=index, y=value)) + 
+    scale_y_continuous (breaks=seq(0, max_y, 5), limits=c(0, max_y)) +
+    geom_bar (stat="identity", fill="gray", width=0.8) + 
+    labs (title = title_bars, x = "", y="Contribution in %\n") +
+    # theme(axis.text.x=element_text(angle=45, vjust=1, hjust=1))
+    theme(axis.text.x=element_text(angle=90, vjust=1, hjust=1))
+  
+  return (bars_plot)
+}
+
+bars_plot_pc4 <- pca_barPlot(res$var$coord, sel_pc="Dim.4")
+# bars_plot_pc2 <- pca_barPlot(res$var$coord, sel_pc="Dim.2")
+# bars_plot_pc3 <- pca_barPlot(res$var$coord, sel_pc="Dim.3")
+
+bars_plot_pc4
