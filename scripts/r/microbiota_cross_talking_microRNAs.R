@@ -133,7 +133,7 @@ data_nest <- group_by(data, taxon, miRNA) %>% nest()
 # cor_method <- "pearson"
 cor_method <- "spearman"
 cor_fun <- function(df) cor.test(df$microbio_rel_ab, df$value, method = cor_method) %>% tidy()
-
+?cor.test
 library(broom) # Convert results of statistical functions (lm, t.test, cor.test, etc.) into tidy tables
 
 # library(fs)

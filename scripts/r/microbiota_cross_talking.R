@@ -38,7 +38,6 @@ microbiota_by_taxon_ori <- read.csv(rel_abundance_by_taxon,
                                      stringsAsFactors = F)
 
 microbiota_by_taxon_tmp <- transpose_df(microbiota_by_taxon_ori)
-
 write.csv(microbiota_by_taxon_tmp, paste0(home_dir, "/tmp.csv"))
 microbiota_by_taxon <- read.csv(paste0(home_dir, "/tmp.csv"),
                                  dec=",",

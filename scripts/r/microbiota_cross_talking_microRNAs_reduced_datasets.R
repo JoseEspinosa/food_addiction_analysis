@@ -119,8 +119,7 @@ taxon_to_keep <- c("Allobaculum",
                    "Enterorhabdus", 
                    "Gastranaerophilales_uncultured bacterium",
                    "Lachnospiraceae_UCG001",
-                   "Lachnospiraceae_UCG006"
-                   )
+                   "Lachnospiraceae_UCG006")
 
 microbiota_by_taxon_filt <- subset(microbiota_by_taxon, select=taxon_to_keep)
 

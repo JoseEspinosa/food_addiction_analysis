@@ -75,6 +75,8 @@ for (i in 1:ncol(Mi)){
   vex2[i]=cp$CCA$eig/(cp$CCA$eig+sum(cp$CA$eig))
 }
 
+v <- vex2[order(vex2,decreasing=TRUE)]
+v
 #the top 3 explaining behavioural variance are from the "interesting" set, there are 5 of this set in the top 10:
 names(vex2)[order(vex2,decreasing=TRUE)[1:10]]
 # [1] "mmu-miR-3085-3p" "mmu-miR-876-5p"  "mmu-miR-665-3p"  "mmu-miR-1197-3p"
