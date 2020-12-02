@@ -234,7 +234,7 @@ hm <- ggplot() + geom_tile(data = corr_pr,
             axis.text.y = element_text(size=axis_text_size_y),
             plot.title = element_text(size=24, hjust = 0.5),
             legend.text = element_text( size=14))
-# hm
+hm
 
 out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_microbio_miRNAs_transformed/")
 dpi_q <- 300
