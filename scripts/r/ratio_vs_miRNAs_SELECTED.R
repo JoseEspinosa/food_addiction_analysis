@@ -4,6 +4,9 @@
 ### Cross-talking between behavior and microbiome                         ###
 #############################################################################
 
+## Figure 5a
+
+
 home_dir <- Sys.getenv("HOME")
 taxon <- "genus"
 ra <- paste0(home_dir, "/git/food_addiction_analysis/forJose/relative_abundances_by_", taxon, ".txt")
@@ -16,6 +19,9 @@ rownames(M)=ma[1,]
 gr=as.character(ma[2,])
 
 library(propr)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
 
 #check differential proportionality:
 
@@ -154,6 +160,7 @@ gr_df=as.data.frame(t(ma[c(1,2),]))
 gr_df
 miRNA29c_gr <-  merge (miRNA29c, gr_df, by= "mouse_id")
 addicts <- subset (miRNA29c_gr, Grouping=="Addict")
+
 cor(addicts$value, addicts$ratio)
 plot(data_nest[[3]][[7]]$value, data_nest[[3]][[7]]$ratio_value)
 text(data_nest[[3]][[7]]$value+0.1, data_nest[[3]][[7]]$ratio_value,data_nest[[3]][[7]]$mouse_id,cex=0.7)
@@ -168,6 +175,9 @@ cor(addicts$value, addicts$ratio)
 ## LOG SCALE!!!
 plot(log(data_nest[[3]][[4]]$value), log(data_nest[[3]][[4]]$ratio_value))
 text(data_nest[[3]][[4]]$value+0.1, data_nest[[3]][[4]]$ratio_value,data_nest[[3]][[7]]$mouse_id,cex=0.7)
+
+mi665_ratios_df <- as.data.frame(data_nest[[3]][[4]])
+ggplot(mi665_ratios_df, aes(x=log(value), y=log(ratio_value))) + geom_point()
 
 cor.test(data_nest[[3]][[4]]$value, data_nest[[3]][[4]]$ratio_value, method = cor_method) %>% tidy()
 
@@ -186,19 +196,21 @@ corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
 
 ###########
 ## FDR
-?p.adjust
+# ?p.adjust
 fdr_cutoff <- 0.2
 corr_pr$fdr <- p.adjust(corr_pr$p.value, method = 'BH', n = length(corr_pr$p.value))
 corr_pr <- mutate(corr_pr, sig = ifelse(fdr < fdr_cutoff, "Sig.", "Non Sig."))
 corr_pr$fdr
 ss<-subset(corr_pr, fdr < 0.2)
+ss
 ## Plot
 title_p <- paste("Correlations between ratio Muribaculaceae/Prevotellacea \nand selected miRNAS",
                  "filtered zeros, NOT transformed\n")
+title_p <- ""
 
 # title_p <- paste("Correlations between ratio Muribaculaceae/Prevotellacea \nand all miRNAS",
 #                  "filtered zeros, transformed\n")
-axis_text_size_y <- 10
+axis_text_size_x <- axis_text_size_y <-  30
 hm <- ggplot() + geom_tile(data = corr_pr,
                            aes(ratio, miRNA, fill = estimate),
                            size = 1,
@@ -218,21 +230,57 @@ hm <- ggplot() + geom_tile(data = corr_pr,
         panel.border = element_blank(),
         panel.background = element_blank(),
         axis.ticks = element_blank(),
-        axis.text.x = element_text(size=axis_text_size_x, angle=90),
-        axis.text.y = element_text(size=axis_text_size_y),
+        axis.text.x = element_text(size=axis_text_size_x),#, angle=0),
+        axis.text.y = element_text(size=axis_text_size_x),
         plot.title = element_text(size=24, hjust = 0.5),
-        legend.text = element_text( size=14))
+        legend.text = element_text( size=24)) +
+        scale_x_discrete(labels=c("\nRatio Bacteroidales/Prevotellaceae"))
 hm
 
-out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/pca_sel_behavior/")
-dpi_q <- 200
+out_dir <- paste0(home_dir, "/Google Drive/microbiota_elena/my_figures_to_elena/20210324/")
+dpi_q <- 300
 extension_img <- ".png"
 
-# All miRNAs
-# axis_text_size_x <- 8; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
-# width_p <- 45; height_p <- 30
-
 # width_p <- 20; height_p <- 14
-ggsave (hm, file=paste0(out_dir, "heatmap_", "all_filtered_miRNA_NOT_transf_", "ratio_murib_prevo", extension_img),
-        width = width_p, height = height_p, dpi=dpi_q)
+ggsave (hm, file=paste0(out_dir, "fig_5a_ratioBP_vs_miRNAs", extension_img),
+        width = 12, height = 20, dpi=dpi_q)
 
+
+## Scatter plot
+
+## Fig 5b
+source ("/Users/jaespinosa/git/food_addiction_analysis/scripts/r/graph_parameters.R")
+plot(log(data_nest[[3]][[4]]$value), log(data_nest[[3]][[4]]$ratio_value))
+text(data_nest[[3]][[4]]$value+0.1, data_nest[[3]][[4]]$ratio_value,data_nest[[3]][[7]]$mouse_id,cex=0.7)
+
+mi665_ratios_df <- as.data.frame(data_nest[[3]][[4]])
+mi665_ratios_df  <-  merge (mi665_ratios_df, gr_df, by= "mouse_id")
+
+sp <- ggplot(mi665_ratios_df, aes(x=log(value), y=log(ratio_value), colour=Grouping)) +
+      geom_point(size=3) +
+      scale_color_manual(labels = c("Addicted", "Control"), values = c("red", "green")) +
+     
+      geom_smooth(method=lm, se=FALSE, linetype="dashed",
+                  color="darkred")+
+      theme(legend.title = element_blank(),
+            legend.key = element_rect(colour = NA, fill = NA),
+            legend.justification = c(1,1), legend.position = c(1,1),
+            legend.box.background = element_rect(colour = "black"))+
+  labs(x= "\nlog(Ratio Bacteroidales/Prevotellaceae)",
+       y = "log(mmu-miR-665-3p)\n") +
+  scale_x_continuous(breaks=c(5.4,5.6, 5.8, 6.0,6.2),
+                     labels = c('5.4','5.6', '5.8', '6.0','6.2')) +
+  scale_y_continuous(breaks=c(-1,0, 1, 2,3,4,5))+
+  annotate("text", x=5.4, y=4.5, label= "rho=0.45\np=0.0498", size=7) +
+  theme(axis.text=element_text(size=2),
+        axis.title=element_text(size=2,face="bold"))
+  
+sp
+
+ggsave (sp, file=paste0(out_dir, "fig_5b_corr_ratioBP_vs_665c", extension_img),
+        width = 12, height = 12, dpi=dpi_q)
+
+
+aes(x=wt, y=mpg, shape=cyl, color=)
+
+cor.test(data_nest[[3]][[4]]$value, data_nest[[3]][[4]]$ratio_value, method = cor_method) %>% tidy()

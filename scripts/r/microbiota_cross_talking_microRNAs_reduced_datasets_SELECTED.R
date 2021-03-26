@@ -243,7 +243,7 @@ width_p <- 20; height_p <- 12
 # first_miRNA <- 'mmu-miR-34c-3p'; last_miRNA <- 'mmu-miR-7666-3p';
 # axis_text_size_x <- 8; size_p_values <- 4; angle_reg<-270; microbio_set <- "all"
 # width_p <- 45; height_p <- 14
-?cor.test
+
 ###############
 # microbiota_relAbund <- subset(microbiota_by_taxon_filt_transf,
 #                               select=-c(Grouping))

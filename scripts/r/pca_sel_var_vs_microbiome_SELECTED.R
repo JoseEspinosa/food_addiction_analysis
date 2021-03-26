@@ -4,7 +4,7 @@
 ### Cross-talking between behavior and microbiome                         ###
 #############################################################################
 
-## SUPPLEMENTARY FIGURE
+## SUPPLEMENTARY FIGURE B
 
 # Loading functions:
 source ("./scripts/r/graph_parameters.R")
