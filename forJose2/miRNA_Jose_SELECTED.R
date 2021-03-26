@@ -4,8 +4,11 @@
 ### Ratio analysis Ionas (toJose2)                                        ###
 #############################################################################
 
-library("vegan")
+## Supplementary fig b
 
+library("vegan")
+home_dir <- Sys.getenv("HOME")
+taxon <- "genus"
 ra <- paste0(home_dir, "/git/food_addiction_analysis/forJose/relative_abundances_by_", taxon, ".txt")
 
 ma=read.table(ra,
@@ -102,7 +105,7 @@ plot(c(cp$CCA$u,cp$CCA$v),c(cp$CA$u[,1],cp$CA$v[,1]),type="n",main="Constrained 
 text(cp$CCA$v,cp$CA$v[,1],colnames(Mb),cex=0.5,col="grey")
 text(cp$CCA$u,cp$CA$u[,1],rownames(Mb),col=col+1,cex=0.7)
 legend("topleft",c("addicted","control"),col=c("red","green"),pch=c("B","B"),cex=0.7)
-# dev.off()
+dev.off()
 
 ## mmu-miR-29c-3p
 cp_29=rda(Mb,Mi[,"mmu-miR-29c-3p"])
@@ -180,6 +183,17 @@ library(vioplot)
 par(mfrow=c(2,2))
 
 vioplot(M[which(gr=="Addict"),10]/M[which(gr=="Addict"),53],M[which(gr=="Non-Addict"),10]/M[which(gr=="Non-Addict"),53],col=c("red","green"),ylog=TRUE,ylab="Muribaculaceae/Prevotellaceae",names=c("addicted","control"),main="Microbiota ratio in groups")
+
+## Effect sizes of the ratios
+summary(M[which(gr=="Addict"),10]/M[which(gr=="Addict"),53])
+
+addicts_v <- M[which(gr=="Addict"),10]/M[which(gr=="Addict"),53]
+control_v <- M[which(gr=="Non-Addict"),10]/M[which(gr=="Non-Addict"),53]
+median(addicts_v)
+mean(addicts_df)
+mean(control_v)
+error <- qt(0.975,df=length(addicts_df)-1)*sd(addicts_df)/sqrt(length(addicts_df))
+error
 
 plot(log(Mi[,"mmu-miR-665-3p"]),log(Mm[,10]/Mm[,53]),type="n",main="Microbiota ratio vs miRNA",xlab="log(mmu-miR-665-3p abundance)",ylab="log(Muribaculaceae/Prevotellaceae)")
 points(log(Mi[,"mmu-miR-665-3p"]),log(Mm[,10]/Mm[,53]),col=col+1,pch=19)
