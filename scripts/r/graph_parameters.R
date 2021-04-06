@@ -27,5 +27,5 @@ dailyInt_theme <- theme_update (
   #panel.border = element_blank(),
   panel.border = element_rect(colour = "black",fill=NA),
   panel.background = element_blank(),
-  axis.line = element_line (colour = "black"),
-  axis.ticks = element_blank())
+  axis.line = element_line (colour = "black"))
+  # axis.ticks = element_blank())
