@@ -6,7 +6,6 @@
 
 ## Figure 5a
 
-
 home_dir <- Sys.getenv("HOME")
 taxon <- "genus"
 ra <- paste0(home_dir, "/git/food_addiction_analysis/forJose/relative_abundances_by_", taxon, ".txt")

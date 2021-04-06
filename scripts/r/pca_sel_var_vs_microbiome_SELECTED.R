@@ -238,8 +238,8 @@ out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/pca_sel_behavi
 dpi_q <- 200
 extension_img <- ".png"
 width_p <- 20; height_p <- 14
-ggsave (hm, file=paste0(out_dir, "heatmap_", "filtered_microbio_transf_", taxon, "_pcaVars", extension_img), 
-        width = width_p, height = height_p, dpi=dpi_q)
+# ggsave (hm, file=paste0(out_dir, "heatmap_", "filtered_microbio_transf_", taxon, "_pcaVars", extension_img), 
+#         width = width_p, height = height_p, dpi=dpi_q)
 
 ######################
 ## microRNA data:
@@ -334,11 +334,14 @@ test_p <- corr_pr$p.value
 # class (corr_pr$p.value)
 
 # test_p<-c(test_p,0.001459265)
-# p.adjust(test_p, method = 'BH', n = length(test_p))
-# corr_pr$fdr <- p.adjust(corr_pr$p.value, method = 'BH', n = length(corr_pr$p.value))
-# corr_pr <- mutate(corr_pr, sig = ifelse(fdr < fdr_cutoff, "Sig.", "Non Sig."))
-# corr_pr$fdr
+p.adjust(test_p, method = 'BH', n = length(test_p))
+corr_pr$fdr <- p.adjust(corr_pr$p.value, method = 'BH', n = length(corr_pr$p.value))
+corr_pr <- mutate(corr_pr, sig = ifelse(fdr < fdr_cutoff, "Sig.", "Non Sig."))
+corr_pr$fdr
 
+ss<-subset(corr_pr, fdr < 0.2)
+pv_FDR_df <- as.data.frame(ss)
+subset(pv_FDR_df, select=c('miRNA','pca_dim','estimate', 'p.value','fdr'))
 # axis_text_size_x<-18
 # axis_text_size_y <- 14
 
