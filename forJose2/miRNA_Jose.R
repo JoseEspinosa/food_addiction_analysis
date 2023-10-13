@@ -183,6 +183,7 @@ par(mfrow=c(2,2))
 
 vioplot(M[which(gr=="Addict"),10]/M[which(gr=="Addict"),53],M[which(gr=="Non-Addict"),10]/M[which(gr=="Non-Addict"),53],col=c("red","green"),ylog=TRUE,ylab="Muribaculaceae/Prevotellaceae",names=c("addicted","control"),main="Microbiota ratio in groups")
 
+## Figure presentation Haitham
 plot(log(Mi[,"mmu-miR-665-3p"]),log(Mm[,10]/Mm[,53]),type="n",main="Microbiota ratio vs miRNA",xlab="log(mmu-miR-665-3p abundance)",ylab="log(Muribaculaceae/Prevotellaceae)")
 points(log(Mi[,"mmu-miR-665-3p"]),log(Mm[,10]/Mm[,53]),col=col+1,pch=19)
 legend("topleft",c("control","addicted"),col=c("green","red"),pch=19)
