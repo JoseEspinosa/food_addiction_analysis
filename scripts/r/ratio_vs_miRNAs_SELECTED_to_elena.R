@@ -209,6 +209,7 @@ title_p <- ""
 
 # title_p <- paste("Correlations between ratio Muribaculaceae/Prevotellacea \nand all miRNAS",
 #                  "filtered zeros, transformed\n")
+## Figure presentation Haitham
 axis_text_size_x <- axis_text_size_y <-  30
 hm <- ggplot() + geom_tile(data = corr_pr,
                            aes(ratio, miRNA, fill = estimate),
