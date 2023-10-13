@@ -113,13 +113,13 @@ v <- df_to_filter[2,] - df_to_filter[1,]
 taxon_to_keep <- colnames(v[which(v > 1)])
 
 ## Hardcoded taxons to keep
-taxon_to_keep <- c("Allobaculum",
-                   "Anaeroplasma",
-                   "Blautia",
-                   "Enterorhabdus", 
-                   "Gastranaerophilales_uncultured bacterium",
-                   "Lachnospiraceae_UCG001",
-                   "Lachnospiraceae_UCG006")
+# taxon_to_keep <- c("Allobaculum",
+#                    "Anaeroplasma",
+#                    "Blautia",
+#                    "Enterorhabdus", 
+#                    "Gastranaerophilales_uncultured bacterium",
+#                    "Lachnospiraceae_UCG001",
+#                    "Lachnospiraceae_UCG006")
 
 microbiota_by_taxon_filt <- subset(microbiota_by_taxon, select=taxon_to_keep)
 
@@ -255,8 +255,8 @@ microbiota_relAbund <- subset(microbiota_by_taxon_filt_clr_microbiome,
 #                                      by= "mouse_id")
 
 ## all filtered miRNAs and taxons
-# first_taxon<-"Alistipes"
-# last_taxon <- "Tyzzerella"
+first_taxon<-"Alistipes"
+last_taxon <- "Tyzzerella"
 # first_miRNA <- "bta-miR-2478";
 # last_miRNA <- "xtr-miR-9b-5p"
 
@@ -266,8 +266,8 @@ microbio_behavioral_merged <- merge (microbiota_relAbund,
                                      by= "mouse_id")
 microbio_behavioral_merged 
 
-first_taxon<-"Allobaculum"
-last_taxon <- "Lachnospiraceae_UCG006"
+# first_taxon<-"Allobaculum"
+# last_taxon <- "Lachnospiraceae_UCG006"
 first_miRNA <- "mmu-miR-100-5p";
 last_miRNA <- "mmu-miR-876-5p"
 
@@ -299,38 +299,39 @@ corr_pr <- mutate(corr_pr, sig = ifelse(p.value <0.05, "Sig.", "Non Sig."))
 
 ###########
 ## FDR
-fdr_cutoff <- 0.3
-test_p <- corr_pr$p.value 
-min(test_p)
+# fdr_cutoff <- 0.3
+# test_p <- corr_pr$p.value 
+# min(test_p)
+# # class (corr_pr$p.value)
+# head(test_p)
+# test_p<- test_p[order(test_p)]
+# # test_p <- c(0.00001459265, test_p )
+# min(qvalue(corr_pr$p.value)$qvalues)
+# 
 # class (corr_pr$p.value)
-head(test_p)
-test_p<- test_p[order(test_p)]
-# test_p <- c(0.00001459265, test_p )
-min(qvalue(corr_pr$p.value)$qvalues)
-
-class (corr_pr$p.value)
-p.adjust(corr_pr$p.value, method="fdr", n=length(corr_pr$p.value))
-min(p.adjust(test_p, method = 'BH', n = length(test_p)))
-plot(qvalue(corr_pr$p.value)$qvalues)
-
-corr_pr$fdr <- p.adjust(corr_pr$p.value, method = 'BH', n = length(corr_pr$p.value))
-corr_pr <- mutate(corr_pr, sig = ifelse(fdr < fdr_cutoff, "Sig.", "Non Sig."))
-corr_pr$fdr
-
-## The result of p.adjust and qvalue is the same
-# BiocManager::install("qvalue")
-# library(qvalue)
-## Plot
-plot(corr_pr$p.value)
-q_value <- qvalue(corr_pr$p.value)
-plot(q_value)
-corr_pr$qvalue <- q_value$qvalues
-corr_pr <- mutate(corr_pr, sig = ifelse(qvalue <0.2, "Sig.", "Non Sig."))
-corr_pr$qvalue
+# p.adjust(corr_pr$p.value, method="fdr", n=length(corr_pr$p.value))
+# min(p.adjust(test_p, method = 'BH', n = length(test_p)))
+# plot(qvalue(corr_pr$p.value)$qvalues)
+# 
+# corr_pr$fdr <- p.adjust(corr_pr$p.value, method = 'BH', n = length(corr_pr$p.value))
+# corr_pr <- mutate(corr_pr, sig = ifelse(fdr < fdr_cutoff, "Sig.", "Non Sig."))
+# corr_pr$fdr
+# 
+# ## The result of p.adjust and qvalue is the same
+# # BiocManager::install("qvalue")
+# # library(qvalue)
+# ## Plot
+# plot(corr_pr$p.value)
+# q_value <- qvalue(corr_pr$p.value)
+# plot(q_value)
+# corr_pr$qvalue <- q_value$qvalues
+# corr_pr <- mutate(corr_pr, sig = ifelse(qvalue <0.3, "Sig.", "Non Sig."))
+# corr_pr$qvalue
 
 #######
-sign <- subset(corr_pr, fdr<0.3)
-sign
+# sign <- subset(corr_pr, fdr<0.3)
+# sign
+## Figure presentation Haitham
 title_tag <- "log transf"
 title_p <- paste("Correlations between miRNA expression and", 
                  first_up(taxon), "relative abundances\n", title_tag)
@@ -374,6 +375,7 @@ extension_img <- ".png"
 # suffix <- "testttttt"
 # microbio_set <- "sssss"
 # microbio_set <- "Silvia_sign_"
+
 ggsave (hm, file=paste0(out_dir, "heatmap_", microbio_set ,"_microbio_logTransform_", "sel_miRNAs_", taxon, suffix, extension_img), 
         width = width_p, height = height_p, dpi=dpi_q)
 
