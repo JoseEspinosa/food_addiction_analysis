@@ -6,6 +6,8 @@
 
 library("vegan")
 
+taxon <- "genus"
+
 ra <- paste0(home_dir, "/git/food_addiction_analysis/forJose/relative_abundances_by_", taxon, ".txt")
 
 ma=read.table(ra,
@@ -205,6 +207,7 @@ res2=lm(log(Mm[,10]/Mm[,53])~log(Mi[,"mmu-miR-29c-3p"]))
 png("../figures/panels_29c.png",width=25,height=25,unit="cm",res=300)
 par(mfrow=c(2,2))
 
+## Figure presentation Haitham
 vioplot(M[which(gr=="Addict"),10]/M[which(gr=="Addict"),53],
         M[which(gr=="Non-Addict"),10]/M[which(gr=="Non-Addict"),53],
         # cex.lab=2,
