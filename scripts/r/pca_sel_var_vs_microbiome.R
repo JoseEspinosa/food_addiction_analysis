@@ -267,20 +267,20 @@ miRNA_clr <- as.data.frame(t(microbiome::transform(miRNA_to_transf, "clr")))
 miRNA_clr$mouse_id <- row.names(miRNA_clr)
 
 ## Select miRNAs from Elena's table
-# miRNAs_data_selected <- subset(miRNA_clr, select=c('mouse_id',
-#                                                      'mmu-miR-876-5p',
-#                                                      'mmu-miR-211-5p',
-#                                                      'mmu-miR-3085-3p',
-#                                                      'mmu-miR-665-3p',
-#                                                      'mmu-miR-3072-3p',
-#                                                      'mmu-miR-124-3p',
-#                                                      'mmu-miR-29c-3p',
-#                                                      'mmu-miR-544-3p',
-#                                                      'mmu-miR-137-3p',
-#                                                      'mmu-miR-100-5p',
-#                                                      'mmu-miR-192-5p'))
-# 
-# miRNA_clr <- miRNAs_data_selected
+miRNAs_data_selected <- subset(miRNA_clr, select=c('mouse_id',
+                                                     'mmu-miR-876-5p',
+                                                     'mmu-miR-211-5p',
+                                                     'mmu-miR-3085-3p',
+                                                     'mmu-miR-665-3p',
+                                                     'mmu-miR-3072-3p',
+                                                     'mmu-miR-124-3p',
+                                                     'mmu-miR-29c-3p',
+                                                     'mmu-miR-544-3p',
+                                                     'mmu-miR-137-3p',
+                                                     'mmu-miR-100-5p',
+                                                     'mmu-miR-192-5p'))
+
+miRNA_clr <- miRNAs_data_selected
 
 ## Merge tables
 pca_miRNA_merged <- merge (miRNA_clr, pca_dim, by= "mouse_id")

@@ -28,7 +28,7 @@ res2
 res2
 which(res2@results$theta<0.8)
 res2@results[158,1:3]
-Partner Pair     theta
+# Partner Pair     theta
 # 158      19    5 0.5093579
 colnames(res2@counts)[c(19,5)]
 
@@ -74,6 +74,9 @@ colnames(mi2)=l2[1,]
 smi1 = mi1[rownames(mi2),]
 mi = cbind(smi1,mi2)
 
+#### NUEVO 18/03/2021
+M_f = M[,-which(test==0)]
+
 #we miss some control mice that are in the microbiome data:
 M3 = M_f[intersect(colnames(mi),rownames(M_f)),]
 MI = t(mi[,intersect(colnames(mi), rownames(M_f))])
@@ -85,12 +88,12 @@ miRNA_ori <- as.data.frame(MI2)
 miRNA_ori$mouse_id <- row.names(miRNA_ori)
 
 ## Transformed data
-# miRNA_to_transf <- t(MI2)
-# miRNA_clr <- as.data.frame(t(microbiome::transform(miRNA_to_transf, "clr")))
-# miRNA_clr$mouse_id <- row.names(miRNA_clr)
+miRNA_to_transf <- t(MI2)
+miRNA_clr <- as.data.frame(t(microbiome::transform(miRNA_to_transf, "clr")))
+miRNA_clr$mouse_id <- row.names(miRNA_clr)
 
-miRNA_to_sel<-miRNA_ori
-# miRNA_to_sel<-miRNA_clr
+# miRNA_to_sel<-miRNA_ori
+miRNA_to_sel<-miRNA_clr
 
 miRNAs_data_selected <- subset(miRNA_to_sel, select=c('mouse_id',
                                                      'mmu-miR-876-5p',
@@ -156,7 +159,7 @@ title_p <- paste("Correlations between ratio Muribaculaceae/Prevotellacea \nand 
 
 # title_p <- paste("Correlations between ratio Muribaculaceae/Prevotellacea \nand all miRNAS",
 #                  "filtered zeros, transformed\n")
-
+axis_text_size_y <- 10
 hm <- ggplot() + geom_tile(data = corr_pr,
                            aes(ratio, miRNA, fill = estimate),
                            size = 1,

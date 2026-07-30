@@ -5,6 +5,8 @@
 ### Cross-talking between behavior and microbiota                         ###
 #############################################################################
 
+## fig 5c
+
 ### Based on
 ## https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-020-0710-2#Sec2
 
@@ -334,18 +336,19 @@ range (sig_corr$estimate)
 # sign <- subset(corr_pr, fdr<0.3)
 sign
 title_tag <- "log transf"
-title_p <- paste("Correlations between miRNA expression and", 
-                 first_up(taxon), "relative abundances\n", title_tag)
+title_p <- ""
+axis_text_size_x <- 18
+axis_text_size_y <-  30
 # axis_text_size<-18
 hm <- ggplot() + geom_tile(data = corr_pr,
-                           # aes(taxon, miRNA, fill = estimate),
-                           aes(miRNA, taxon, fill = estimate),
+                           aes(taxon, miRNA, fill = estimate),
+                           # aes(miRNA, taxon, fill = estimate),
                            size = 1,
                            colour = "white") +
   ## black lines around tiles
   geom_tile(data = filter(corr_pr, sig == "Sig."),
-            # aes(taxon, miRNA),
-            aes(miRNA, taxon),
+            aes(taxon, miRNA),
+            # aes(miRNA, taxon),
             size = 1,
             colour = "black",
             fill = "transparent") +
@@ -364,20 +367,21 @@ hm <- ggplot() + geom_tile(data = corr_pr,
         panel.border = element_blank(),
         panel.background = element_blank(),
         axis.ticks = element_blank(),
-        axis.text.x = element_text(size=axis_text_size_x, angle=90),
+        axis.text.x = element_text(size=axis_text_size_x, angle=45, vjust = 1, hjust = 1),
         axis.text.y = element_text(size=axis_text_size_y),
         plot.title = element_text(size=24, hjust = 0.5),
         legend.text = element_text( size=14))
 hm
 
-out_dir <- paste0(home_dir, "/git/food_addiction_analysis/figures/cross_talking_microbio_miRNAs_transformed/")
-dpi_q <- 200
+out_dir <- paste0(home_dir, "/Google Drive/microbiota_elena/my_figures_to_elena/20210324/")
+dpi_q <- 300
 extension_img <- ".png"
+
 # suffix <- "testttttt"
 # microbio_set <- "sssss"
 # microbio_set <- "Silvia_sign_"
-ggsave (hm, file=paste0(out_dir, "heatmap_", microbio_set ,"_microbio_logTransform_", "sel_miRNAs_", taxon, suffix, extension_img), 
-        width = width_p, height = height_p, dpi=dpi_q)
+ggsave (hm, file=paste0(out_dir, "fig_5c_microbiome_vs_miRNAs", extension_img), 
+        width = 20, height = 12, dpi=dpi_q)
 
 
 ## Is done by row
